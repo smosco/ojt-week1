@@ -21,9 +21,7 @@ export default function DragMatchCanvas({ question }: Props) {
   useEffect(() => {
     if (!canvasRef.current) return;
 
-    const canvas = new Canvas(canvasRef.current, {
-      selection: false,
-    });
+    const canvas = new Canvas(canvasRef.current, { selection: false });
     fabricCanvas.current = canvas;
 
     const SLOT_X = 150;
@@ -37,7 +35,7 @@ export default function DragMatchCanvas({ question }: Props) {
     const wordGroups: Record<string, Group> = {};
     const initialPositions: Record<string, { left: number; top: number }> = {};
 
-    // 슬롯(빈칸) 생성
+    // 슬롯 생성
     question.leftLabels.forEach((label, i) => {
       const y = SLOT_Y_START + i * SLOT_GAP_Y;
 
@@ -67,20 +65,6 @@ export default function DragMatchCanvas({ question }: Props) {
         hasBorders: false,
         selectable: false,
         hoverCursor: 'pointer',
-      });
-
-      group.on('mouseover', () => {
-        if (!submitted) {
-          rect.set('fill', 'green');
-          canvas.renderAll();
-        }
-      });
-
-      group.on('mouseout', () => {
-        if (!submitted) {
-          rect.set('fill', 'lightgray');
-          canvas.renderAll();
-        }
       });
 
       slotGroups[label] = group;
@@ -113,16 +97,34 @@ export default function DragMatchCanvas({ question }: Props) {
         top,
         hasControls: false,
         hasBorders: false,
-        lockMovementX: false,
-        lockMovementY: false,
       });
 
       initialPositions[word] = { left, top };
 
       group.on('mousedown', () => {
         if (submitted) return;
-        // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-        (group as any).bringToFront?.();
+        // @ts-ignore
+        group.bringToFront?.();
+      });
+
+      group.on('moving', () => {
+        if (submitted) return;
+
+        for (const [slotLabel, slotGroup] of Object.entries(slotGroups)) {
+          const slotBox = slotGroup.getBoundingRect();
+          const wordBox = group.getBoundingRect();
+
+          const isOverlapping =
+            wordBox.left < slotBox.left + slotBox.width &&
+            wordBox.left + wordBox.width > slotBox.left &&
+            wordBox.top < slotBox.top + slotBox.height &&
+            wordBox.top + wordBox.height > slotBox.top;
+
+          const slotRect = slotGroup.item(0) as Rect;
+          slotRect.set('fill', isOverlapping ? 'green' : 'lightgray');
+        }
+
+        canvas.renderAll();
       });
 
       group.on('mouseup', () => {
@@ -133,13 +135,13 @@ export default function DragMatchCanvas({ question }: Props) {
           const slotBox = slotGroup.getBoundingRect();
           const wordBox = group.getBoundingRect();
 
-          if (
+          const isOverlapping =
             wordBox.left < slotBox.left + slotBox.width &&
             wordBox.left + wordBox.width > slotBox.left &&
             wordBox.top < slotBox.top + slotBox.height &&
-            wordBox.top + wordBox.height > slotBox.top
-          ) {
-            // ref에서 최신값 사용
+            wordBox.top + wordBox.height > slotBox.top;
+
+          if (isOverlapping) {
             const existingWord = answersRef.current[slotLabel];
             const prevSlot = wordSlotMapRef.current[word];
 
@@ -163,7 +165,6 @@ export default function DragMatchCanvas({ question }: Props) {
 
             group.set({ left: slotGroup.left, top: slotGroup.top });
             group.setCoords();
-            canvas.renderAll();
             dropped = true;
             break;
           }
@@ -173,8 +174,15 @@ export default function DragMatchCanvas({ question }: Props) {
           const { left, top } = initialPositions[word];
           group.set({ left, top });
           group.setCoords();
-          canvas.renderAll();
         }
+
+        // 슬롯 색상 원복
+        for (const slotGroup of Object.values(slotGroups)) {
+          const slotRect = slotGroup.item(0) as Rect;
+          slotRect.set('fill', 'lightgray');
+        }
+
+        canvas.renderAll();
       });
 
       canvas.add(group);
@@ -186,10 +194,10 @@ export default function DragMatchCanvas({ question }: Props) {
     };
   }, [question, submitted]);
 
-  // 상태와 ref 동기화
   useEffect(() => {
     answersRef.current = answers;
   }, [answers]);
+
   useEffect(() => {
     wordSlotMapRef.current = wordSlotMap;
   }, [wordSlotMap]);
@@ -219,8 +227,6 @@ export default function DragMatchCanvas({ question }: Props) {
 
     canvas.renderAll();
   };
-
-  // console.log(answers, answersRef);
 
   return (
     <div className='flex flex-col items-center gap-4'>
