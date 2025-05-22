@@ -26,6 +26,7 @@ export default function PairMatch({ question }: Props) {
   const startLabel = useRef<string | null>(null);
 
   useEffect(() => {
+    // console.log('라인변경');
     linesRef.current = lines;
   }, [lines]);
 
@@ -156,12 +157,14 @@ export default function PairMatch({ question }: Props) {
     return () => {
       canvas.dispose();
     };
-  }, [question, submitted]);
+    // TODO: useEffect 하나로 관리해 생긴 의존성 배열 문제 리팩토링 필요(lines)
+  }, [question]);
 
   const handleCheck = () => {
     if (!fabricCanvas.current) return;
     setSubmitted(true);
 
+    // TODO: 문제 데이터 구조 수정
     linesRef.current.forEach(({ from, to, line }) => {
       const isCorrect = question.correctPairs.some(
         ([correctFrom, correctTo]) => correctFrom === from && correctTo === to,
