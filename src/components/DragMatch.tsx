@@ -6,8 +6,8 @@ type Props = {
   question: DragQuestion;
 };
 
-type AnswerMap = Record<string, string>; // { slotLabel: word }
-type WordMap = Record<string, string>; // { word: slotLabel }
+type AnswerMap = Record<string, string>;
+type WordMap = Record<string, string>;
 
 export default function DragMatchCanvas({ question }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -33,9 +33,9 @@ export default function DragMatchCanvas({ question }: Props) {
 
     const slotGroups: Record<string, Group> = {};
     const wordGroups: Record<string, Group> = {};
+    const ghostGroups: Record<string, Group> = {};
     const initialPositions: Record<string, { left: number; top: number }> = {};
 
-    // 슬롯 생성
     question.leftLabels.forEach((label, i) => {
       const y = SLOT_Y_START + i * SLOT_GAP_Y;
 
@@ -64,14 +64,12 @@ export default function DragMatchCanvas({ question }: Props) {
         hasControls: false,
         hasBorders: false,
         selectable: false,
-        hoverCursor: 'pointer',
       });
 
       slotGroups[label] = group;
       canvas.add(labelText, group);
     });
 
-    // 단어 그룹 생성
     question.options.forEach((word, i) => {
       const left = OPTION_X_START + i * OPTION_GAP;
       const top = OPTION_Y;
@@ -97,20 +95,69 @@ export default function DragMatchCanvas({ question }: Props) {
         top,
         hasControls: false,
         hasBorders: false,
+        lockMovementX: false,
+        lockMovementY: false,
+        selectable: true,
+        evented: true,
       });
 
       initialPositions[word] = { left, top };
+      wordGroups[word] = group;
+      canvas.add(group);
+
+      const ghostRect = new Rect({
+        width: 80,
+        height: 30,
+        fill: '#eee',
+        rx: 5,
+        ry: 5,
+        originX: 'center',
+        originY: 'center',
+        opacity: 0.4,
+      });
+      const ghostText = new FabricText(word, {
+        fontSize: 14,
+        originX: 'center',
+        originY: 'center',
+        opacity: 0.4,
+      });
+      const ghostGroup = new Group([ghostRect, ghostText], {
+        left,
+        top,
+        hasControls: false,
+        hasBorders: false,
+        selectable: false,
+        evented: false,
+        visible: false,
+      });
+      ghostGroups[word] = ghostGroup;
+      canvas.add(ghostGroup);
+      canvas.sendObjectToBack(ghostGroup); // 드래그 그룹보다 뒤로
 
       group.on('mousedown', () => {
         if (submitted) return;
+
+        group.set({
+          lockMovementX: false,
+          lockMovementY: false,
+          selectable: true,
+          evented: true,
+        });
         // @ts-ignore
         group.bringToFront?.();
+
+        const ghost = ghostGroups[word];
+        const rect = ghost.item(0) as Rect;
+        rect.set({ stroke: 'green', strokeWidth: 2 });
+        ghost.set('visible', true);
+        canvas.renderAll();
       });
 
       group.on('moving', () => {
         if (submitted) return;
 
-        for (const [slotLabel, slotGroup] of Object.entries(slotGroups)) {
+        for (const slotGroup of Object.values(slotGroups)) {
+          const slotRect = slotGroup.item(0) as Rect;
           const slotBox = slotGroup.getBoundingRect();
           const wordBox = group.getBoundingRect();
 
@@ -120,7 +167,6 @@ export default function DragMatchCanvas({ question }: Props) {
             wordBox.top < slotBox.top + slotBox.height &&
             wordBox.top + wordBox.height > slotBox.top;
 
-          const slotRect = slotGroup.item(0) as Rect;
           slotRect.set('fill', isOverlapping ? 'green' : 'lightgray');
         }
 
@@ -131,6 +177,7 @@ export default function DragMatchCanvas({ question }: Props) {
         if (submitted) return;
 
         let dropped = false;
+
         for (const [slotLabel, slotGroup] of Object.entries(slotGroups)) {
           const slotBox = slotGroup.getBoundingRect();
           const wordBox = group.getBoundingRect();
@@ -165,6 +212,8 @@ export default function DragMatchCanvas({ question }: Props) {
 
             group.set({ left: slotGroup.left, top: slotGroup.top });
             group.setCoords();
+
+            ghostGroups[word].set('visible', true);
             dropped = true;
             break;
           }
@@ -176,17 +225,17 @@ export default function DragMatchCanvas({ question }: Props) {
           group.setCoords();
         }
 
-        // 슬롯 색상 원복
         for (const slotGroup of Object.values(slotGroups)) {
           const slotRect = slotGroup.item(0) as Rect;
           slotRect.set('fill', 'lightgray');
         }
+        for (const ghost of Object.values(ghostGroups)) {
+          const rect = ghost.item(0) as Rect;
+          rect.set({ stroke: null, strokeWidth: 0 });
+        }
 
         canvas.renderAll();
       });
-
-      canvas.add(group);
-      wordGroups[word] = group;
     });
 
     return () => {
