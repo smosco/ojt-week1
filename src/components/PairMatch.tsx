@@ -17,14 +17,17 @@ export default function PairMatch({ question }: Props) {
   const fabricCanvas = useRef<Canvas | null>(null);
 
   const [lines, setLines] = useState<MatchLine[]>([]);
+  const linesRef = useRef<MatchLine[]>([]);
   const [submitted, setSubmitted] = useState(false);
 
   const leftPoints = useRef<Record<string, Circle>>({});
   const rightPoints = useRef<Record<string, Circle>>({});
-  const labelPositions = useRef<Record<string, { x: number; y: number }>>({});
-
   const currentLine = useRef<Line | null>(null);
   const startLabel = useRef<string | null>(null);
+
+  useEffect(() => {
+    linesRef.current = lines;
+  }, [lines]);
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -70,6 +73,13 @@ export default function PairMatch({ question }: Props) {
         const { left, top } = point;
         if (!left || !top) return;
 
+        // 기존 from 라인 제거
+        const existingLine = linesRef.current.find((l) => l.from === label);
+        if (existingLine) {
+          fabricCanvas.current?.remove(existingLine.line);
+          setLines((prev) => prev.filter((l) => l.from !== label));
+        }
+
         const line = new Line([left, top, left, top], {
           stroke: 'gray',
           strokeWidth: 2,
@@ -81,9 +91,7 @@ export default function PairMatch({ question }: Props) {
         startLabel.current = label;
       });
 
-      labelPositions.current[label] = { x: point.left!, y: point.top! };
       leftPoints.current[label] = point;
-
       canvas.add(text, point);
     });
 
@@ -117,26 +125,31 @@ export default function PairMatch({ question }: Props) {
         if (!left || !top) return;
 
         currentLine.current.set({ x2: left, y2: top });
-        canvas.renderAll();
+        fabricCanvas.current?.renderAll();
 
         const from = startLabel.current;
         const to = label;
+        const newLine = currentLine.current;
 
-        setLines((prev) => [...prev, { from, to, line: currentLine.current! }]);
+        // 기존 to 라인 제거
+        const existingToLine = linesRef.current.find((l) => l.to === to);
+        if (existingToLine) {
+          fabricCanvas.current?.remove(existingToLine.line);
+          setLines((prev) => prev.filter((l) => l.to !== to));
+        }
+
+        setLines((prev) => [...prev, { from, to, line: newLine }]);
         currentLine.current = null;
         startLabel.current = null;
       });
 
-      labelPositions.current[label] = { x: point.left!, y: point.top! };
       rightPoints.current[label] = point;
-
       canvas.add(text, point);
     });
 
-    // 실시간 선 따라다니기
     canvas.on('mouse:move', (e) => {
-      if (!currentLine.current || !e.pointer) return;
-      currentLine.current.set({ x2: e.pointer.x, y2: e.pointer.y });
+      if (!currentLine.current || !e.viewportPoint) return;
+      currentLine.current.set({ x2: e.viewportPoint.x, y2: e.viewportPoint.y });
       canvas.renderAll();
     });
 
@@ -149,7 +162,7 @@ export default function PairMatch({ question }: Props) {
     if (!fabricCanvas.current) return;
     setSubmitted(true);
 
-    lines.forEach(({ from, to, line }) => {
+    linesRef.current.forEach(({ from, to, line }) => {
       const isCorrect = question.correctPairs.some(
         ([correctFrom, correctTo]) => correctFrom === from && correctTo === to,
       );
@@ -173,7 +186,7 @@ export default function PairMatch({ question }: Props) {
         </button>
       ) : (
         <p className='text-lg font-semibold text-gray-700'>
-          {lines.every(({ from, to }) =>
+          {linesRef.current.every(({ from, to }) =>
             question.correctPairs.some(([a, b]) => a === from && b === to),
           )
             ? '✅ 정답입니다!'
