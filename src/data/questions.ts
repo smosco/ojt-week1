@@ -66,7 +66,6 @@ export const questionData: InteractiveQuestion[] = [
   //   question: '다음 단어에 알맞은 영어를 빈칸에 끌어다 놓으세요.',
   //   slots: [
   //     { id: 'slot1', label: '사과' },
-  //     { id: 'slot2', label: '바나나', preset: 'banana' },
   //     { id: 'slot3', label: '오렌지' },
   //   ],
   //   draggableItems: ['apple', 'orange'],

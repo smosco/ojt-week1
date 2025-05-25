@@ -10,6 +10,7 @@ export type ChoiceQuestion = {
   id: string;
   type: 'choice';
   question: string;
+  prompt?: string;
   expression?: string;
   options: string[];
   correctAnswers: string[];

@@ -1,9 +1,18 @@
-import { Canvas, Path } from 'fabric';
-import { useEffect, useRef } from 'react';
-import type { ChoiceQuestion } from '../types/question';
-
 interface Props {
-  question: ChoiceQuestion;
+  question: {
+    id: string;
+    prompt: string;
+    options: string[];
+    correctAnswers: string[];
+    media: {
+      type: 'fraction-circle';
+      totalParts: number;
+      filledParts: number;
+      radius: number;
+      fillColor: string;
+      strokeColor: string;
+    };
+  };
   onAnswer: (selected: string) => void;
   userAnswer?: string;
   feedbackVisible?: boolean;
@@ -15,87 +24,67 @@ export default function FractionCircleQuestionCanvas({
   userAnswer,
   feedbackVisible = false,
 }: Props) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const fabricCanvas = useRef<Canvas | null>(null);
-
-  useEffect(() => {
-    if (!canvasRef.current) return;
-
-    const canvas = new Canvas(canvasRef.current, {
-      selection: false,
-      width: 300,
-      height: 300,
-    });
-    fabricCanvas.current = canvas;
-
-    if (question.media?.type === 'fraction-circle') {
-      const {
-        totalParts,
-        filledParts,
-        radius,
-        fillColor,
-        strokeColor,
-        centerX = 150,
-        centerY = 150,
-      } = question.media;
-
-      const anglePerPart = 360 / totalParts;
-
-      for (let i = 0; i < totalParts; i++) {
-        const startAngle = (anglePerPart * i * Math.PI) / 180;
-        const endAngle = (anglePerPart * (i + 1) * Math.PI) / 180;
-
-        const x1 = centerX + radius * Math.cos(startAngle);
-        const y1 = centerY + radius * Math.sin(startAngle);
-        const x2 = centerX + radius * Math.cos(endAngle);
-        const y2 = centerY + radius * Math.sin(endAngle);
-
-        const pathData = `M ${centerX} ${centerY} L ${x1} ${y1} A ${radius} ${radius} 0 0 1 ${x2} ${y2} Z`;
-
-        const slice = new Path(pathData, {
-          fill: i < filledParts ? fillColor : '#eee',
-          stroke: strokeColor,
-          strokeWidth: 1,
-          selectable: false,
-          evented: false,
-        });
-        canvas.add(slice);
-      }
-    }
-
-    return () => {
-      fabricCanvas.current?.dispose();
-      fabricCanvas.current = null;
-    };
-  }, [question]);
+  const { totalParts, filledParts, radius, fillColor, strokeColor } =
+    question.media;
 
   const getButtonClass = (opt: string) => {
-    if (userAnswer !== opt) {
-      return 'bg-white border border-gray-300';
-    }
-
     if (feedbackVisible) {
-      return question.correctAnswers.includes(opt)
-        ? 'bg-green-100 border-green-500'
-        : 'bg-red-100 border-red-500';
+      if (question.correctAnswers.includes(opt))
+        return 'bg-green-200 text-green-900';
+      if (userAnswer === opt) return 'bg-red-200 text-red-900';
+      return 'bg-gray-100 text-gray-600';
     }
-
-    return 'bg-blue-100 border-blue-500';
+    if (userAnswer === opt) return 'bg-yellow-200 text-yellow-900';
+    return 'bg-white text-[#333]';
   };
 
+  const center = 100;
+  const slices = Array.from({ length: totalParts }).map((_, i) => {
+    const startAngle = (2 * Math.PI * i) / totalParts;
+    const endAngle = (2 * Math.PI * (i + 1)) / totalParts;
+
+    const x1 = center + radius * Math.cos(startAngle);
+    const y1 = center + radius * Math.sin(startAngle);
+    const x2 = center + radius * Math.cos(endAngle);
+    const y2 = center + radius * Math.sin(endAngle);
+
+    const largeArc = endAngle - startAngle > Math.PI ? 1 : 0;
+
+    const pathData = `M ${center} ${center} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} Z`;
+
+    return (
+      <path
+        // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
+        key={i}
+        d={pathData}
+        fill={i < filledParts ? fillColor : '#eee'}
+        stroke={strokeColor}
+        strokeWidth='2'
+      />
+    );
+  });
+
   return (
-    <div>
-      <canvas ref={canvasRef} />
-      <div className='mt-4 flex flex-wrap gap-3'>
+    <div className='flex flex-col items-center gap-6 w-full px-4'>
+      <h2 className='text-3xl font-extrabold text-[#333] tracking-wide text-center'>
+        {question.prompt}
+      </h2>
+
+      {/* biome-ignore lint/a11y/noSvgWithoutTitle: <explanation> */}
+      <svg width='200' height='200' viewBox='0 0 200 200'>
+        {slices}
+      </svg>
+
+      <div className='grid grid-cols-2 gap-4 w-full max-w-md'>
         {question.options.map((opt) => (
           <button
-            key={opt}
             type='button'
+            key={opt}
             onClick={() => onAnswer(opt)}
             disabled={feedbackVisible}
-            className={`px-4 py-2 text-base rounded-md transition
-              ${getButtonClass(opt)}
-              ${feedbackVisible ? 'cursor-default' : 'hover:bg-blue-50 cursor-pointer'}`}
+            className={`px-6 py-4 text-xl font-bold rounded-xl shadow-md transition transform hover:scale-105 active:scale-95 ${getButtonClass(
+              opt,
+            )}`}
           >
             {opt}
           </button>

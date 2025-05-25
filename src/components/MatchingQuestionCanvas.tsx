@@ -9,7 +9,6 @@ interface Props {
   feedbackVisible?: boolean;
 }
 
-// Line에 data 프로퍼티를 추가한 커스텀 타입 선언
 interface LineWithData extends Line {
   data?: { from: string; to: string };
 }
@@ -46,43 +45,50 @@ export default function MatchingQuestionCanvas({
 
   useEffect(() => {
     if (!canvasRef.current || fabricCanvas.current) return;
+
     const canvas = new Canvas(canvasRef.current, {
-      width: 700,
-      height: 400,
+      width: 800,
+      height: 500,
       selection: false,
     });
     fabricCanvas.current = canvas;
 
-    const leftStartX = 100;
-    const rightStartX = 600;
-    const startY = 50;
-    const gapY = 60;
+    const leftX = 120;
+    const rightX = 680;
+    const startY = 80;
+    const gapY = 80;
 
     question.pairs.left.forEach((label, i) => {
       const y = startY + i * gapY;
+
       const text = new FabricText(label, {
-        left: leftStartX,
+        left: leftX,
         top: y,
-        fontSize: 16,
+        fontSize: 22,
+        fontWeight: 'bold',
+        fill: '#333',
         originX: 'left',
         originY: 'center',
         selectable: false,
         evented: false,
       });
+
       const point = new Circle({
-        left: leftStartX - 20,
+        left: leftX + text.width! + 20,
         top: y,
-        radius: 6,
-        fill: 'blue',
+        radius: 10,
+        fill: '#7DD3FC',
+        stroke: '#0EA5E9',
+        strokeWidth: 2,
         originX: 'center',
         originY: 'center',
         selectable: false,
         evented: true,
       });
+
       point.on('mousedown', () => {
         if (feedbackVisible) return;
 
-        // 기존 연결 제거
         if (matches[label]) {
           removeExistingLine(label);
           const updated = { ...matches };
@@ -94,17 +100,17 @@ export default function MatchingQuestionCanvas({
         const line = new Line(
           [point.left!, point.top!, point.left!, point.top!],
           {
-            stroke: 'black',
-            strokeWidth: 2,
+            stroke: '#94A3B8',
+            strokeWidth: 4,
             selectable: false,
             evented: false,
           },
         ) as LineWithData;
         currentLine.current = line;
         canvas.add(line);
-        // @ts-ignore
-        canvas.sendToBack(line); // 라인을 항상 맨 아래로 보내기
+        canvas.sendObjectToBack(line);
       });
+
       leftPoints.current[label] = point;
       canvas.add(text);
       canvas.add(point);
@@ -112,38 +118,44 @@ export default function MatchingQuestionCanvas({
 
     question.pairs.right.forEach((label, i) => {
       const y = startY + i * gapY;
+
       const text = new FabricText(label, {
-        left: rightStartX,
+        left: rightX,
         top: y,
-        fontSize: 16,
+        fontSize: 22,
+        fontWeight: 'bold',
+        fill: '#333',
         originX: 'right',
         originY: 'center',
         selectable: false,
         evented: false,
       });
+
       const point = new Circle({
-        left: rightStartX + 20,
+        left: rightX - text.width! - 20,
         top: y,
-        radius: 6,
-        fill: 'red',
+        radius: 10,
+        fill: '#FBCFE8',
+        stroke: '#EC4899',
+        strokeWidth: 2,
         originX: 'center',
         originY: 'center',
         selectable: false,
         evented: true,
       });
+
       point.on('mouseup', () => {
         if (feedbackVisible) return;
+
         const start = startLabel.current;
         if (!start || !leftPoints.current[start]) return;
 
-        // 이미 연결된 오른쪽 점이면 무시
         const existingTargets = Object.values(matches);
         if (existingTargets.includes(label)) return;
 
         const from = leftPoints.current[start];
         const to = point;
 
-        // 기존 연결 제거
         removeExistingLine(start);
         removeExistingLine(undefined, label);
 
@@ -156,18 +168,11 @@ export default function MatchingQuestionCanvas({
           canvas.requestRenderAll();
           linesRef.current.push(currentLine.current);
 
-          // matches 안전하게 누적
           setMatches((prev) => {
             const newMatches = { ...prev, [start]: label };
-
-            console.log('[DEBUG] 현재 matches:', newMatches);
-            console.log('[DEBUG] 필요한 수:', question.pairs.left.length);
-
             if (Object.keys(newMatches).length === question.pairs.left.length) {
-              console.log('[onMatch 호출됨]', newMatches);
               onMatch(newMatches);
             }
-
             return newMatches;
           });
         }
@@ -175,6 +180,7 @@ export default function MatchingQuestionCanvas({
         startLabel.current = null;
         currentLine.current = null;
       });
+
       rightPoints.current[label] = point;
       canvas.add(text);
       canvas.add(point);
@@ -182,7 +188,7 @@ export default function MatchingQuestionCanvas({
 
     canvas.on('mouse:move', (opt) => {
       if (currentLine.current) {
-        const pointer = canvas.getViewportPoint(opt.e);
+        const pointer = canvas.getPointer(opt.e);
         currentLine.current.set({ x2: pointer.x, y2: pointer.y });
         canvas.requestRenderAll();
       }
@@ -211,8 +217,8 @@ export default function MatchingQuestionCanvas({
       const line = new Line(
         [fromPt.left!, fromPt.top!, toPt.left!, toPt.top!],
         {
-          stroke: isCorrect ? 'green' : 'red',
-          strokeWidth: 2,
+          stroke: isCorrect ? '#34D399' : '#F87171',
+          strokeWidth: 4,
           selectable: false,
           evented: false,
         },

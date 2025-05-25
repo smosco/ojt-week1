@@ -19,7 +19,6 @@ interface QuestionResult {
 export default function QuestionRenderer({ questions, onComplete }: Props) {
   const [index, setIndex] = useState(0);
   const [results, setResults] = useState<QuestionResult[]>([]);
-  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   const [userAnswer, setUserAnswer] = useState<any>(null);
   const [feedbackVisible, setFeedbackVisible] = useState(false);
 
@@ -33,6 +32,13 @@ export default function QuestionRenderer({ questions, onComplete }: Props) {
       return (
         userAnswer &&
         Object.keys(userAnswer).length === current.draggableItems.length
+      );
+    }
+    if (current.type === 'slot-drag') {
+      return (
+        userAnswer &&
+        Object.keys(userAnswer).length ===
+          current.slots.filter((s) => !s.preset).length
       );
     }
     if (current.type === 'match') {
@@ -78,63 +84,76 @@ export default function QuestionRenderer({ questions, onComplete }: Props) {
     console.log('[DEBUG] userAnswer changed:', userAnswer);
   }, [userAnswer]);
 
+  const progressPercentage = ((index + 1) / questions.length) * 100;
+
   return (
-    <div>
-      <h2>
-        문제 {index + 1} / {questions.length}
-      </h2>
+    <div className='w-screen min-h-screen bg-gradient-to-b from-[#B6E3FF] to-[#D5F8CE] flex flex-col items-center justify-start px-6 py-10 gap-8'>
+      <div className='w-full max-w-5xl'>
+        <div className='text-2xl font-extrabold text-[#444] mb-2'>
+          문제 {index + 1} / {questions.length}
+        </div>
+        <div className='w-full h-5 bg-yellow-100 rounded-full overflow-hidden'>
+          {/* biome-ignore lint/style/useSelfClosingElements: <explanation> */}
+          <div
+            className='h-full bg-yellow-300 transition-all duration-500'
+            style={{ width: `${progressPercentage}%` }}
+          ></div>
+        </div>
+      </div>
 
-      {current.type === 'choice' &&
-        (current.media?.type === 'fraction-circle' ? (
-          <FractionCircleQuestionCanvas
+      <div className='w-full max-w-5xl bg-white rounded-3xl shadow-xl p-8'>
+        {current.type === 'choice' &&
+          (current.media?.type === 'fraction-circle' ? (
+            <FractionCircleQuestionCanvas
+              question={current}
+              onAnswer={setUserAnswer}
+              userAnswer={userAnswer}
+              feedbackVisible={feedbackVisible}
+            />
+          ) : (
+            <ChoiceQuestionCanvas
+              question={current}
+              onAnswer={setUserAnswer}
+              userAnswer={userAnswer}
+              feedbackVisible={feedbackVisible}
+            />
+          ))}
+
+        {/* {current.type === 'drag' && (
+          <DragDropQuestionCanvas
             question={current}
-            onAnswer={setUserAnswer}
+            onDrop={setUserAnswer}
             userAnswer={userAnswer}
             feedbackVisible={feedbackVisible}
           />
-        ) : (
-          <ChoiceQuestionCanvas
+        )}
+
+        {current.type === 'slot-drag' && (
+          <SlotDragQuestionCanvas
             question={current}
-            onAnswer={setUserAnswer}
+            onDrop={setUserAnswer}
             userAnswer={userAnswer}
             feedbackVisible={feedbackVisible}
           />
-        ))}
+        )} */}
 
-      {/* {current.type === 'drag' && (
-        <DragDropQuestionCanvas
-          question={current}
-          onDrop={setUserAnswer}
-          userAnswer={userAnswer}
-          feedbackVisible={feedbackVisible}
-        />
-      )} */}
+        {current.type === 'match' && (
+          <MatchingQuestionCanvas
+            question={current}
+            onMatch={setUserAnswer}
+            userAnswer={userAnswer}
+            feedbackVisible={feedbackVisible}
+          />
+        )}
+      </div>
 
-      {/* {current.type === 'slot-drag' && (
-        <SlotDragQuestionCanvas
-          question={current}
-          onDrop={setUserAnswer}
-          userAnswer={userAnswer}
-          feedbackVisible={feedbackVisible}
-        />
-      )} */}
-
-      {current.type === 'match' && (
-        <MatchingQuestionCanvas
-          question={current}
-          onMatch={setUserAnswer}
-          userAnswer={userAnswer}
-          feedbackVisible={feedbackVisible}
-        />
-      )}
-
-      <div style={{ marginTop: 24 }}>
+      <div className='mt-4'>
         {!feedbackVisible ? (
           <button
             type='button'
             onClick={checkAnswer}
             disabled={!isAnswerComplete}
-            style={{ padding: '10px 20px', fontSize: 16 }}
+            className='px-10 py-3 text-lg font-bold rounded-full shadow-md transition-all duration-200 text-white disabled:opacity-50 disabled:cursor-not-allowed bg-yellow-300 hover:bg-yellow-400'
           >
             정답 확인
           </button>
@@ -142,7 +161,7 @@ export default function QuestionRenderer({ questions, onComplete }: Props) {
           <button
             type='button'
             onClick={goToNext}
-            style={{ padding: '10px 20px', fontSize: 16 }}
+            className='px-10 py-3 text-lg font-bold rounded-full shadow-md transition-all duration-200 text-white bg-yellow-300 hover:bg-yellow-400'
           >
             다음 문제
           </button>
