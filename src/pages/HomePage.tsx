@@ -9,7 +9,7 @@ export default function HomePage() {
       <button
         type='button'
         className='px-4 py-2 bg-blue-500 text-white rounded'
-        onClick={() => navigate('/quiz')}
+        onClick={() => navigate('/question')}
       >
         시작하기
       </button>
