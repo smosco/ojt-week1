@@ -1,62 +1,54 @@
-// 문제 타입 통합
-export type InteractiveQuestion =
-  | ChoiceQuestion
-  | DragDropQuestion
-  | DragDropQuestion
-  | MatchingQuestion;
-
-// 선택형 문제
-export type ChoiceQuestion = {
+// 기본 문제 인터페이스
+interface BaseQuestion {
   id: string;
-  type: 'choice';
   question: string;
   prompt?: string;
+}
+
+// 선택형 문제
+export interface ChoiceQuestion extends BaseQuestion {
+  type: 'choice';
   options: string[];
   correctAnswers: string[];
   media?: DotsMedia | FractionCircleMedia | ClockMedia;
-};
+}
 
 // 드래그앤드롭 문제
-export interface DragDropQuestion {
-  id: string;
+export interface DragDropQuestion extends BaseQuestion {
   type: 'drag';
-  question: string;
   leftLabels: string[]; // 드래그 가능한 항목들
   options: string[]; // 슬롯들 (ex: 예각, 직각, 둔각)
   correctPairs: [string, string][]; // [항목, 정답 슬롯]
   media?: ImageItemsMedia;
 }
 
-// 이미지 기반 드래그 항목
-export type ImageItemsMedia = {
-  type: 'image-items';
-  items: {
-    label: string;
-    image: string; // 예: '/images/angle_30.png'
-  }[];
-};
-
 // 선 연결형 문제
-export type MatchingQuestion = {
-  id: string;
+export interface MatchingQuestion extends BaseQuestion {
   type: 'match';
-  question: string;
   pairs: {
     left: string[];
     right: string[];
   };
   correctMatches: Record<string, string>;
   media?: PolygonIconsMedia | TextMatchMedia;
-};
+}
+
+// 문제 타입 통합 (중복 제거)
+export type InteractiveQuestion = ChoiceQuestion | DragDropQuestion | MatchingQuestion;
+
+// 답안 타입들
+export type ChoiceAnswer = string;
+export type DragDropAnswer = Record<string, string>;
+export type MatchingAnswer = Record<string, string>;
 
 // DropZone 정의
-export type DropZoneLabel = {
+export interface DropZoneLabel {
   label: string;
   description?: string;
-};
+}
 
-// media 타입들
-export type DotsMedia = {
+// Media 타입들
+export interface DotsMedia {
   type: 'dots';
   groups: number[];
   dotRadius: number;
@@ -65,9 +57,9 @@ export type DotsMedia = {
   dotColor: string;
   startX?: number;
   startY?: number;
-};
+}
 
-export type FractionCircleMedia = {
+export interface FractionCircleMedia {
   type: 'fraction-circle';
   totalParts: number;
   filledParts: number;
@@ -76,24 +68,24 @@ export type FractionCircleMedia = {
   strokeColor: string;
   centerX?: number;
   centerY?: number;
-};
+}
 
-export type ClockMedia = {
+export interface ClockMedia {
   type: 'clock';
   hour: number;
   minute: number;
   radius?: number;
-};
+}
 
-export type ObjectIconsMedia = {
+export interface ObjectIconsMedia {
   type: 'object-icons';
   items: {
     label: string;
     icon: string;
   }[];
-};
+}
 
-export type CategoryBoxesMedia = {
+export interface CategoryBoxesMedia {
   type: 'category-boxes';
   dropZoneStyle: {
     width: number;
@@ -101,9 +93,9 @@ export type CategoryBoxesMedia = {
     fillColor: string;
   };
   labels?: Record<string, string>;
-};
+}
 
-export type DropZoneMedia = {
+export interface DropZoneMedia {
   type: 'dropzones';
   zones: {
     label: string;
@@ -115,19 +107,40 @@ export type DropZoneMedia = {
     borderColor?: string;
     textColor?: string;
   }[];
-};
+}
 
-export type PolygonIconsMedia = {
+export interface PolygonIconsMedia {
   type: 'polygon-icons';
   icons: {
     sides: number;
     label: string;
     color: string;
   }[];
-};
+}
 
-export type TextMatchMedia = {
+export interface TextMatchMedia {
   type: 'text-match';
   fontSize: number;
   lineSpacing: number;
-};
+}
+
+export interface ImageItemsMedia {
+  type: 'image-items';
+  items: {
+    label: string;
+    image: string;
+  }[];
+}
+
+// 유틸리티 타입들
+export type QuestionType = InteractiveQuestion['type'];
+export type MediaType = 
+  | DotsMedia['type']
+  | FractionCircleMedia['type'] 
+  | ClockMedia['type']
+  | ObjectIconsMedia['type']
+  | CategoryBoxesMedia['type']
+  | DropZoneMedia['type']
+  | PolygonIconsMedia['type']
+  | TextMatchMedia['type']
+  | ImageItemsMedia['type'];
