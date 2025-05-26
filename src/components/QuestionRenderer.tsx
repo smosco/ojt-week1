@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import ChoiceQuestionCanvas from '../components/ChoiceQuestionCanvas';
-import DragDropQuestionCanvas from '../components/DragDropQuestionCanvas';
+// import DragDropQuestionCanvas from '../components/DragDropQuestionCanvas';
 import FractionCircleQuestionCanvas from '../components/FractionCircleQuestionCanvas';
 import MatchingQuestionCanvas from '../components/MatchingQuestionCanvas';
-import SlotDragQuestionCanvas from '../components/SlotDragQuestionCanvas';
+// import SlotDragQuestionCanvas from '../components/SlotDragQuestionCanvas';
 import useResultStore from '../stores/useResultStore';
+import useToastStore from '../stores/useToastStore';
 import type { InteractiveQuestion } from '../types/question';
 
 interface Props {
@@ -17,9 +18,9 @@ export default function QuestionRenderer({ questions, onComplete }: Props) {
   // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   const [userAnswer, setUserAnswer] = useState<any>(null);
   const [feedbackVisible, setFeedbackVisible] = useState(false);
-  const { results, addResult } = useResultStore();
 
-  console.log(results);
+  const { addResult } = useResultStore();
+  const { addToast } = useToastStore();
 
   const current = questions[index];
 
@@ -66,6 +67,11 @@ export default function QuestionRenderer({ questions, onComplete }: Props) {
 
     setFeedbackVisible(true);
     addResult({ id: current.id, isCorrect });
+    if (isCorrect) {
+      addToast('훌륭해요! 🎉', 'success');
+    } else {
+      addToast('다시 생각해봐요!', 'error');
+    }
   };
 
   const goToNext = () => {
@@ -79,9 +85,9 @@ export default function QuestionRenderer({ questions, onComplete }: Props) {
     }
   };
 
-  useEffect(() => {
-    console.log('[DEBUG] userAnswer changed:', userAnswer);
-  }, [userAnswer]);
+  // useEffect(() => {
+  //   console.log('[DEBUG] userAnswer changed:', userAnswer);
+  // }, [userAnswer]);
 
   const progressPercentage = ((index + 1) / questions.length) * 100;
 

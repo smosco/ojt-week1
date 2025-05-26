@@ -1,5 +1,6 @@
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 import RootLayout from './components/layout/RootLayout';
+import ToastManager from './components/ui/ToastManager';
 import ErrorPage from './pages/ErrorPage';
 import HomePage from './pages/HomePage';
 import QuestionPage from './pages/QuestionPage';
@@ -19,7 +20,12 @@ const router = createBrowserRouter([
 ]);
 
 function App() {
-  return <RouterProvider router={router} />;
+  return (
+    <>
+      <RouterProvider router={router} />
+      <ToastManager />
+    </>
+  );
 }
 
 export default App;
