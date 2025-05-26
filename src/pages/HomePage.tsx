@@ -3,6 +3,10 @@ import { useNavigate } from 'react-router-dom';
 export default function HomePage() {
   const navigate = useNavigate();
 
+  const handleStart = () => {
+    navigate('/question');
+  };
+
   return (
     <div className='w-screen h-screen bg-gradient-to-b from-[#B6E3FF] to-[#D5F8CE] flex items-center justify-center overflow-hidden relative'>
       {/* 배경 캐릭터, 장식 */}
@@ -28,7 +32,7 @@ export default function HomePage() {
 
         <button
           type='button'
-          onClick={() => navigate('/question')}
+          onClick={handleStart}
           className='px-12 py-5 bg-yellow-300 hover:bg-yellow-400 active:scale-95 transition-all duration-200 text-2xl font-bold text-white rounded-[2rem] shadow-lg'
         >
           🚀 시작하기

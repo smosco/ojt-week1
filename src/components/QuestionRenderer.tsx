@@ -4,23 +4,22 @@ import DragDropQuestionCanvas from '../components/DragDropQuestionCanvas';
 import FractionCircleQuestionCanvas from '../components/FractionCircleQuestionCanvas';
 import MatchingQuestionCanvas from '../components/MatchingQuestionCanvas';
 import SlotDragQuestionCanvas from '../components/SlotDragQuestionCanvas';
+import useResultStore from '../stores/useResultStore';
 import type { InteractiveQuestion } from '../types/question';
 
 interface Props {
   questions: InteractiveQuestion[];
-  onComplete: (results: QuestionResult[]) => void;
-}
-
-interface QuestionResult {
-  id: string;
-  isCorrect: boolean;
+  onComplete: () => void;
 }
 
 export default function QuestionRenderer({ questions, onComplete }: Props) {
   const [index, setIndex] = useState(0);
-  const [results, setResults] = useState<QuestionResult[]>([]);
+  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   const [userAnswer, setUserAnswer] = useState<any>(null);
   const [feedbackVisible, setFeedbackVisible] = useState(false);
+  const { results, addResult } = useResultStore();
+
+  console.log(results);
 
   const current = questions[index];
 
@@ -66,7 +65,7 @@ export default function QuestionRenderer({ questions, onComplete }: Props) {
     }
 
     setFeedbackVisible(true);
-    setResults([...results, { id: current.id, isCorrect }]);
+    addResult({ id: current.id, isCorrect });
   };
 
   const goToNext = () => {
@@ -76,7 +75,7 @@ export default function QuestionRenderer({ questions, onComplete }: Props) {
       setUserAnswer(null);
       setFeedbackVisible(false);
     } else {
-      onComplete(results);
+      onComplete();
     }
   };
 

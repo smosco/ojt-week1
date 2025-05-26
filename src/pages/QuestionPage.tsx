@@ -1,14 +1,19 @@
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import QuestionRenderer from '../components/QuestionRenderer';
 import { questionData } from '../data/questions';
+import useResultStore from '../stores/useResultStore';
 
 export default function QuestionPage() {
   const navigate = useNavigate();
+  const { start, finish } = useResultStore();
 
-  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-  const handleComplete = (results: any[]) => {
-    // 결과를 저장하거나 전달 (예: localStorage or 상태관리)
-    localStorage.setItem('quiz-results', JSON.stringify(results));
+  useEffect(() => {
+    start(questionData.length);
+  }, [questionData]);
+
+  const handleComplete = () => {
+    finish();
     navigate('/result');
   };
 
