@@ -13,7 +13,7 @@ interface Props {
 }
 
 // 각 문제 타입별 답안 타입 정의
-type ChoiceAnswer = string | null;
+type ChoiceAnswer = string | string[] | null;
 type DragDropAnswer = Record<string, string> | null;
 type MatchingAnswer = Record<string, string> | null;
 type UserAnswer = ChoiceAnswer | DragDropAnswer | MatchingAnswer;
@@ -21,7 +21,26 @@ type UserAnswer = ChoiceAnswer | DragDropAnswer | MatchingAnswer;
 // 정답 확인 함수들
 const answerCheckers = {
   choice: (question: ChoiceQuestion, answer: ChoiceAnswer): boolean => {
-    return answer !== null && question.correctAnswers.includes(answer);
+    if (!answer) return false;
+    
+    // 다중 선택인지 확인
+    const isMultipleChoice = question.correctAnswers.length > 1;
+    
+    if (isMultipleChoice) {
+      // 다중 선택: 배열로 받은 답안이 정답과 완전히 일치해야 함
+      if (!Array.isArray(answer)) return false;
+      
+      // 선택한 답의 개수와 정답의 개수가 같아야 함
+      if (answer.length !== question.correctAnswers.length) return false;
+      
+      // 모든 선택한 답이 정답에 포함되어야 함
+      return answer.every(ans => question.correctAnswers.includes(ans)) &&
+             question.correctAnswers.every(correct => answer.includes(correct));
+    } else {
+      // 단일 선택: 기존 로직
+      const answerToCheck = Array.isArray(answer) ? answer[0] : answer;
+      return answerToCheck !== null && question.correctAnswers.includes(answerToCheck);
+    }
   },
 
   drag: (question: DragDropQuestion, answer: DragDropAnswer): boolean => {
@@ -46,7 +65,18 @@ const answerCheckers = {
 // 답안 완성도 확인 함수들
 const completenessCheckers = {
   choice: (question: ChoiceQuestion, answer: ChoiceAnswer): boolean => {
-    return answer !== null;
+    if (!answer) return false;
+    
+    // 다중 선택인지 확인
+    const isMultipleChoice = question.correctAnswers.length > 1;
+    
+    if (isMultipleChoice) {
+      // 다중 선택: 최소 1개 이상 선택되어야 함
+      return Array.isArray(answer) && answer.length > 0;
+    } else {
+      // 단일 선택: 기존 로직
+      return Array.isArray(answer) ? answer.length > 0 : answer !== null;
+    }
   },
 
   drag: (question: DragDropQuestion, answer: DragDropAnswer): boolean => {
@@ -104,12 +134,6 @@ export default function QuestionRenderer({ questions, onComplete }: Props) {
 
   // 문제 컴포넌트 렌더링
   const renderQuestionComponent = () => {
-    const commonProps = {
-      onAnswer: setUserAnswer,
-      userAnswer,
-      feedbackVisible
-    };
-
     switch (currentQuestion.type) {
       case 'choice': {
         const choiceQuestion = currentQuestion as ChoiceQuestion;
@@ -118,7 +142,9 @@ export default function QuestionRenderer({ questions, onComplete }: Props) {
           return (
             <FractionCircleQuestionCanvas
               question={choiceQuestion}
-              {...commonProps}
+              onAnswer={setUserAnswer}
+              userAnswer={userAnswer as string[] | null}
+              feedbackVisible={feedbackVisible}
             />
           );
         }
@@ -126,7 +152,12 @@ export default function QuestionRenderer({ questions, onComplete }: Props) {
         return (
           <ChoiceQuestionCanvas
             question={currentQuestion}
-            {...commonProps}
+            onAnswer={(answer: string) => {
+              // 기존 단일 선택 문제는 배열로 래핑
+              setUserAnswer([answer]);
+            }}
+            userAnswer={Array.isArray(userAnswer) ? userAnswer[0] : userAnswer}
+            feedbackVisible={feedbackVisible}
           />
         );
       }

@@ -1,10 +1,40 @@
 import { useMemo } from 'react';
 import type { ChoiceQuestion } from '../types/question';
-import { BaseQuestionProps, getAnswerButtonStyle, baseButtonClasses, createSVGPath } from '../types/common';
+import { BaseQuestionProps, baseButtonClasses } from '../types/common';
 
-interface Props extends BaseQuestionProps<string> {
+interface Props extends BaseQuestionProps<string[]> {
   question: ChoiceQuestion;
 }
+
+// 다중 선택을 위한 버튼 스타일 함수
+const getMultipleAnswerButtonStyle = (
+  option: string,
+  userAnswer: string[] | null,
+  correctAnswers: string[],
+  feedbackVisible: boolean
+): string => {
+  const isSelected = userAnswer?.includes(option) || false;
+  const isCorrect = correctAnswers.includes(option);
+  
+  if (feedbackVisible) {
+    if (isCorrect && isSelected) {
+      return 'bg-green-500 text-white border-green-600'; // 정답이면서 선택함
+    } else if (isCorrect && !isSelected) {
+      return 'bg-green-200 text-green-800 border-green-400'; // 정답인데 선택 안함
+    } else if (!isCorrect && isSelected) {
+      return 'bg-red-500 text-white border-red-600'; // 오답인데 선택함
+    } else {
+      return 'bg-gray-100 text-gray-600 border-gray-300'; // 오답이면서 선택 안함
+    }
+  }
+  
+  // 피드백 전 상태
+  if (isSelected) {
+    return 'bg-blue-500 text-white border-blue-600 shadow-lg transform scale-105';
+  }
+  
+  return 'bg-white text-gray-700 border-gray-300 hover:bg-blue-50 hover:border-blue-300';
+};
 
 export default function FractionCircleQuestionCanvas({
   question,
@@ -21,8 +51,28 @@ export default function FractionCircleQuestionCanvas({
 
   const media = question.media;
   const { totalParts, filledParts, radius, fillColor, strokeColor } = media;
+  
+  // 다중 선택 여부 확인
+  const isMultipleChoice = question.correctAnswers.length > 1;
 
-  // 복잡한 SVG 원형 차트 생성 (다양한 SVG 태그 활용)
+  // 선택지 토글 함수
+  const toggleOption = (option: string) => {
+    if (feedbackVisible) return;
+    
+    if (isMultipleChoice) {
+      // 다중 선택 모드
+      const currentAnswers = userAnswer || [];
+      const newAnswers = currentAnswers.includes(option)
+        ? currentAnswers.filter(ans => ans !== option)
+        : [...currentAnswers, option];
+      onAnswer(newAnswers);
+    } else {
+      // 단일 선택 모드
+      onAnswer([option]);
+    }
+  };
+
+  // 복잡한 SVG 원형 차트 생성 (기존 코드와 동일)
   const fractionVisualization = useMemo(() => {
     const center = { x: 150, y: 150 };
     const innerRadius = radius * 0.6;
@@ -109,9 +159,6 @@ export default function FractionCircleQuestionCanvas({
       const startAngle = (2 * Math.PI * i) / totalParts - Math.PI / 2;
       const endAngle = (2 * Math.PI * (i + 1)) / totalParts - Math.PI / 2;
       const isFilled = i < filledParts;
-      
-      // 외부 경로
-      const outerPath = createSVGPath(center, outerRadius, startAngle, endAngle);
       
       // 내부 경로 (도넛 모양을 위해)
       const innerStartX = center.x + innerRadius * Math.cos(startAngle);
@@ -352,17 +399,26 @@ export default function FractionCircleQuestionCanvas({
           <button
             key={option}
             type="button"
-            onClick={() => !feedbackVisible && onAnswer(option)}
+            onClick={() => toggleOption(option)}
             disabled={feedbackVisible}
-            className={`${baseButtonClasses} ${getAnswerButtonStyle(
+            className={`${baseButtonClasses} ${getMultipleAnswerButtonStyle(
               option,
               userAnswer,
               question.correctAnswers,
               feedbackVisible
             )} disabled:cursor-not-allowed disabled:transform-none relative overflow-hidden`}
-            aria-pressed={userAnswer === option}
+            aria-pressed={userAnswer?.includes(option) || false}
             aria-label={`선택지 ${option}`}
           >
+            {/* 선택 표시 */}
+            {userAnswer?.includes(option) && (
+              <div className="absolute top-1 right-1">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                  <path d="M8 0C3.58 0 0 3.58 0 8s3.58 8 8 8 8-3.58 8-8-3.58-8-8-8zm3.5 6L7 10.5 4.5 8 5.91 6.59 7 7.67l3.59-3.58L12 5.5z"/>
+                </svg>
+              </div>
+            )}
+
             {/* 선택지 내부 분수 미리보기 */}
             <div className="flex items-center justify-center gap-2">
               <span className="text-2xl font-bold">{option}</span>
@@ -402,7 +458,18 @@ export default function FractionCircleQuestionCanvas({
       {/* 도움말 */}
       {!feedbackVisible && (
         <div className="text-center text-sm text-gray-500 bg-gray-50 rounded-lg p-3">
-          💡 색칠된 부분을 잘 보고 같은 크기의 분수를 모두 선택하세요
+          {isMultipleChoice ? (
+            <span>💡 색칠된 부분보다 큰 분수를 <strong>모두</strong> 선택하세요 (여러 개 선택 가능)</span>
+          ) : (
+            <span>💡 색칠된 부분을 잘 보고 같은 크기의 분수를 선택하세요</span>
+          )}
+        </div>
+      )}
+
+      {/* 선택 현황 표시 (다중 선택인 경우) */}
+      {isMultipleChoice && !feedbackVisible && userAnswer && userAnswer.length > 0 && (
+        <div className="text-center text-sm text-blue-600 bg-blue-50 rounded-lg p-3">
+          선택한 답: {userAnswer.join(', ')} ({userAnswer.length}개 선택됨)
         </div>
       )}
     </div>
