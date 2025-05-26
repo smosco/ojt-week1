@@ -5,64 +5,79 @@ import MatchingQuestionCanvas from '../components/MatchingQuestionCanvas';
 import DragDropQuestionCanvas from './DragDropQuestionCanvas';
 import useResultStore from '../stores/useResultStore';
 import useToastStore from '../stores/useToastStore';
-import type { ChoiceQuestion, InteractiveQuestion } from '../types/question';
+import type { ChoiceQuestion, InteractiveQuestion, DragDropQuestion, MatchingQuestion } from '../types/question';
 
 interface Props {
   questions: InteractiveQuestion[];
   onComplete: () => void;
 }
 
+// 각 문제 타입별 답안 타입 정의
+type ChoiceAnswer = string | null;
+type DragDropAnswer = Record<string, string> | null;
+type MatchingAnswer = Record<string, string> | null;
+type UserAnswer = ChoiceAnswer | DragDropAnswer | MatchingAnswer;
+
+// 정답 확인 함수들
+const answerCheckers = {
+  choice: (question: ChoiceQuestion, answer: ChoiceAnswer): boolean => {
+    return answer !== null && question.correctAnswers.includes(answer);
+  },
+
+  drag: (question: DragDropQuestion, answer: DragDropAnswer): boolean => {
+    if (!answer || !Array.isArray(question.correctPairs)) return false;
+    
+    const answerEntries = Object.entries(answer);
+    return (
+      answerEntries.length === question.correctPairs.length &&
+      question.correctPairs.every(([slot, word]) => answer[slot] === word)
+    );
+  },
+
+  match: (question: MatchingQuestion, answer: MatchingAnswer): boolean => {
+    if (!answer) return false;
+    
+    return Object.entries(question.correctMatches).every(
+      ([key, val]) => answer[key] === val
+    );
+  }
+};
+
+// 답안 완성도 확인 함수들
+const completenessCheckers = {
+  choice: (question: ChoiceQuestion, answer: ChoiceAnswer): boolean => {
+    return answer !== null;
+  },
+
+  drag: (question: DragDropQuestion, answer: DragDropAnswer): boolean => {
+    return answer !== null && Object.keys(answer).length === question.leftLabels.length;
+  },
+
+  match: (question: MatchingQuestion, answer: MatchingAnswer): boolean => {
+    return answer !== null && Object.keys(answer).length === question.pairs.left.length;
+  }
+};
+
 export default function QuestionRenderer({ questions, onComplete }: Props) {
-  const [currentIndex, seCurrentIndex] = useState(0);
-  const currentQuestion = questions[currentIndex];
-  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-  const [userAnswer, setUserAnswer] = useState<any>(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [userAnswer, setUserAnswer] = useState<UserAnswer>(null);
   const [feedbackVisible, setFeedbackVisible] = useState(false);
 
   const { total, addResult } = useResultStore();
   const { addToast } = useToastStore();
 
-  // 현재 문제의 답변이 완전한지 여부를 판단하는 함수
-  const isAnswerComplete = (() => {
-    if (currentQuestion.type === 'choice') {
-      return userAnswer !== null;
-    }
-    if (currentQuestion.type === 'drag') {
-      return (
-        userAnswer &&
-        Object.keys(userAnswer).length === currentQuestion.leftLabels.length
-      );
-    }
-    if (currentQuestion.type === 'match') {
-      return (
-        userAnswer &&
-        Object.keys(userAnswer).length === currentQuestion.pairs.left.length
-      );
-    }
-    return false;
-  })();
+  const currentQuestion = questions[currentIndex];
 
-  // 정답을 확인하고 피드백을 표시하는 함수
-  const checkAnswer = () => {
-    // TODO: isCorrect 초기값을 false로 설정해도 괜찮은지 고민
-    let isCorrect = false;
+  // 현재 문제의 답변이 완전한지 확인
+  const isAnswerComplete = (): boolean => {
+    const checker = completenessCheckers[currentQuestion.type];
+    return checker(currentQuestion as any, userAnswer as any);
+  };
 
-    if (currentQuestion.type === 'choice') {
-      isCorrect = currentQuestion.correctAnswers.includes(userAnswer);
-    } else if (currentQuestion.type === 'drag') {
-      // slot-drag 정답 체크: 모든 slot-label에 대해 userAnswer[slot] === word 인지 확인
-      isCorrect =
-        Array.isArray(currentQuestion.correctPairs) &&
-        currentQuestion.correctPairs.length ===
-          Object.entries(userAnswer).length &&
-        currentQuestion.correctPairs.every(
-          ([slot, word]) => userAnswer[slot] === word,
-        );
-    } else if (currentQuestion.type === 'match') {
-      isCorrect = Object.entries(currentQuestion.correctMatches).every(
-        ([key, val]) => userAnswer[key] === val,
-      );
-    }
+  // 정답 확인
+  const checkAnswer = (): void => {
+    const checker = answerCheckers[currentQuestion.type];
+    const isCorrect = checker(currentQuestion as any, userAnswer as any);
 
     setFeedbackVisible(true);
     addResult({ id: currentQuestion.id, isCorrect });
@@ -74,10 +89,12 @@ export default function QuestionRenderer({ questions, onComplete }: Props) {
     }
   };
 
-  const goToNext = () => {
-    const next = currentIndex + 1;
-    if (next < questions.length) {
-      seCurrentIndex(next);
+  // 다음 문제로 이동
+  const goToNext = (): void => {
+    const nextIndex = currentIndex + 1;
+    
+    if (nextIndex < questions.length) {
+      setCurrentIndex(nextIndex);
       setUserAnswer(null);
       setFeedbackVisible(false);
     } else {
@@ -85,11 +102,65 @@ export default function QuestionRenderer({ questions, onComplete }: Props) {
     }
   };
 
+  // 문제 컴포넌트 렌더링
+  const renderQuestionComponent = () => {
+    const commonProps = {
+      onAnswer: setUserAnswer,
+      userAnswer,
+      feedbackVisible
+    };
+
+    switch (currentQuestion.type) {
+      case 'choice': {
+        const choiceQuestion = currentQuestion as ChoiceQuestion;
+        
+        if (choiceQuestion.media?.type === 'fraction-circle') {
+          return (
+            <FractionCircleQuestionCanvas
+              question={choiceQuestion}
+              {...commonProps}
+            />
+          );
+        }
+        
+        return (
+          <ChoiceQuestionCanvas
+            question={currentQuestion}
+            {...commonProps}
+          />
+        );
+      }
+      
+      case 'drag':
+        return (
+          <DragDropQuestionCanvas
+            question={currentQuestion}
+            onDrop={setUserAnswer}
+            userAnswer={userAnswer}
+            feedbackVisible={feedbackVisible}
+          />
+        );
+      
+      case 'match':
+        return (
+          <MatchingQuestionCanvas
+            question={currentQuestion}
+            onMatch={setUserAnswer}
+            userAnswer={userAnswer}
+            feedbackVisible={feedbackVisible}
+          />
+        );
+      
+      default:
+        return null;
+    }
+  };
+
   const progressPercentage = ((currentIndex + 1) / total) * 100;
 
   return (
     <div className='min-h-screen bg-gradient-to-b from-[#B6E3FF] to-[#D5F8CE] flex flex-col items-center justify-start px-6 py-10 gap-8'>
-      {/* 탑 : 현재 문제 진행 상황 표시 */}
+      {/* 진행 상황 표시 */}
       <div className='w-full max-w-5xl'>
         <div className='font-["GmarketSans"] text-2xl font-bold text-[#444] mb-2'>
           문제 {currentIndex + 1} / {total}
@@ -102,51 +173,18 @@ export default function QuestionRenderer({ questions, onComplete }: Props) {
         </div>
       </div>
 
-      {/* 미들 : 문제 */}
+      {/* 문제 영역 */}
       <div className='w-full max-w-5xl bg-white rounded-3xl shadow-xl px-8 py-16'>
-        {currentQuestion.type === 'choice' &&
-          (currentQuestion.media?.type === 'fraction-circle' ? (
-            <FractionCircleQuestionCanvas
-              question={currentQuestion as ChoiceQuestion}
-              onAnswer={setUserAnswer}
-              userAnswer={userAnswer}
-              feedbackVisible={feedbackVisible}
-            />
-          ) : (
-            <ChoiceQuestionCanvas
-              question={currentQuestion}
-              onAnswer={setUserAnswer}
-              userAnswer={userAnswer}
-              feedbackVisible={feedbackVisible}
-            />
-          ))}
-
-        {currentQuestion.type === 'drag' && (
-          <DragDropQuestionCanvas
-            question={currentQuestion}
-            onDrop={setUserAnswer}
-            userAnswer={userAnswer}
-            feedbackVisible={feedbackVisible}
-          />
-        )}
-
-        {currentQuestion.type === 'match' && (
-          <MatchingQuestionCanvas
-            question={currentQuestion}
-            onMatch={setUserAnswer}
-            userAnswer={userAnswer}
-            feedbackVisible={feedbackVisible}
-          />
-        )}
+        {renderQuestionComponent()}
       </div>
 
-      {/* 하단 : 정답 확인 버튼 */}
+      {/* 버튼 영역 */}
       <div className='mt-4'>
         {!feedbackVisible ? (
           <button
             type='button'
             onClick={checkAnswer}
-            disabled={!isAnswerComplete}
+            disabled={!isAnswerComplete()}
             className='px-10 py-3 text-2xl font-bold rounded-full shadow-md transition-all duration-200 text-white disabled:opacity-50 disabled:cursor-not-allowed bg-yellow-400 hover:bg-yellow-500'
           >
             정답 확인
@@ -157,7 +195,7 @@ export default function QuestionRenderer({ questions, onComplete }: Props) {
             onClick={goToNext}
             className='px-10 py-3 text-2xl font-bold rounded-full shadow-md transition-all duration-200 text-white bg-yellow-400 hover:bg-yellow-500'
           >
-            다음 문제
+            {currentIndex + 1 < questions.length ? '다음 문제' : '완료'}
           </button>
         )}
       </div>
