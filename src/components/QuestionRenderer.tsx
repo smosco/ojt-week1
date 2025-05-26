@@ -3,7 +3,7 @@ import ChoiceQuestionCanvas from '../components/ChoiceQuestionCanvas';
 // import DragDropQuestionCanvas from '../components/DragDropQuestionCanvas';
 import FractionCircleQuestionCanvas from '../components/FractionCircleQuestionCanvas';
 import MatchingQuestionCanvas from '../components/MatchingQuestionCanvas';
-// import SlotDragQuestionCanvas from '../components/SlotDragQuestionCanvas';
+import SlotDragQuestionCanvas from '../components/SlotDragQuestionCanvas';
 import useResultStore from '../stores/useResultStore';
 import useToastStore from '../stores/useToastStore';
 import type { ChoiceQuestion, InteractiveQuestion } from '../types/question';
@@ -37,8 +37,7 @@ export default function QuestionRenderer({ questions, onComplete }: Props) {
     if (currentQuestion.type === 'slot-drag') {
       return (
         userAnswer &&
-        Object.keys(userAnswer).length ===
-          currentQuestion.slots.filter((s) => !s.preset).length
+        Object.keys(userAnswer).length === currentQuestion.leftLabels.length
       );
     }
     if (currentQuestion.type === 'match') {
@@ -61,6 +60,15 @@ export default function QuestionRenderer({ questions, onComplete }: Props) {
       isCorrect = Object.entries(currentQuestion.correctPlacements).every(
         ([key, val]) => userAnswer[key] === val,
       );
+    } else if (currentQuestion.type === 'slot-drag') {
+      // slot-drag 정답 체크: 모든 slot-label에 대해 userAnswer[slot] === word 인지 확인
+      isCorrect =
+        Array.isArray(currentQuestion.correctPairs) &&
+        currentQuestion.correctPairs.length ===
+          Object.entries(userAnswer).length &&
+        currentQuestion.correctPairs.every(
+          ([slot, word]) => userAnswer[slot] === word,
+        );
     } else if (currentQuestion.type === 'match') {
       isCorrect = Object.entries(currentQuestion.correctMatches).every(
         ([key, val]) => userAnswer[key] === val,
@@ -94,7 +102,7 @@ export default function QuestionRenderer({ questions, onComplete }: Props) {
     <div className='min-h-screen bg-gradient-to-b from-[#B6E3FF] to-[#D5F8CE] flex flex-col items-center justify-start px-6 py-10 gap-8'>
       {/* 탑 : 현재 문제 진행 상황 표시 */}
       <div className='w-full max-w-5xl'>
-        <div className='text-2xl font-bold text-[#444] mb-2'>
+        <div className='font-["GmarketSans"] text-2xl font-bold text-[#444] mb-2'>
           문제 {currentIndex + 1} / {total}
         </div>
         <div className='w-full h-5 bg-yellow-100 rounded-full overflow-hidden'>
@@ -131,7 +139,7 @@ export default function QuestionRenderer({ questions, onComplete }: Props) {
             userAnswer={userAnswer}
             feedbackVisible={feedbackVisible}
           />
-        )}
+        )} */}
 
         {currentQuestion.type === 'slot-drag' && (
           <SlotDragQuestionCanvas
@@ -140,7 +148,7 @@ export default function QuestionRenderer({ questions, onComplete }: Props) {
             userAnswer={userAnswer}
             feedbackVisible={feedbackVisible}
           />
-        )} */}
+        )}
 
         {currentQuestion.type === 'match' && (
           <MatchingQuestionCanvas

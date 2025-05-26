@@ -27,18 +27,14 @@ export type DragDropQuestion = {
   media?: ObjectIconsMedia | CategoryBoxesMedia | DropZoneMedia;
 };
 
-export type SlotDragQuestion = {
+export interface SlotDragQuestion {
   id: string;
   type: 'slot-drag';
   question: string;
-  slots: {
-    id: string;
-    label: string; // 예: '사과'
-    preset?: string; // 이미 채워진 값 (optional)
-  }[];
-  draggableItems: string[]; // ex: ['apple', 'orange']
-  correctPlacements: Record<string, string>; // slotId → 정답
-};
+  leftLabels: string[]; // 드롭 슬롯에 대응되는 좌측 라벨들
+  options: string[]; // 아래에 드래그 가능한 단어들
+  correctPairs: [string, string][]; // [leftLabel, option]의 정답쌍
+}
 
 // 선 연결형 문제
 export type MatchingQuestion = {
