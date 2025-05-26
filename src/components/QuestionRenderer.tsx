@@ -2,10 +2,15 @@ import { useState } from 'react';
 import ChoiceQuestionCanvas from '../components/ChoiceQuestionCanvas';
 import FractionCircleQuestionCanvas from '../components/FractionCircleQuestionCanvas';
 import MatchingQuestionCanvas from '../components/MatchingQuestionCanvas';
-import DragDropQuestionCanvas from './DragDropQuestionCanvas';
 import useResultStore from '../stores/useResultStore';
 import useToastStore from '../stores/useToastStore';
-import type { ChoiceQuestion, InteractiveQuestion, DragDropQuestion, MatchingQuestion } from '../types/question';
+import type {
+  ChoiceQuestion,
+  DragDropQuestion,
+  InteractiveQuestion,
+  MatchingQuestion,
+} from '../types/question';
+import DragDropQuestionCanvas from './DragDropQuestionCanvas';
 
 interface Props {
   questions: InteractiveQuestion[];
@@ -22,30 +27,35 @@ type UserAnswer = ChoiceAnswer | DragDropAnswer | MatchingAnswer;
 const answerCheckers = {
   choice: (question: ChoiceQuestion, answer: ChoiceAnswer): boolean => {
     if (!answer) return false;
-    
+
     // 다중 선택인지 확인
     const isMultipleChoice = question.correctAnswers.length > 1;
-    
+
     if (isMultipleChoice) {
       // 다중 선택: 배열로 받은 답안이 정답과 완전히 일치해야 함
       if (!Array.isArray(answer)) return false;
-      
+
       // 선택한 답의 개수와 정답의 개수가 같아야 함
       if (answer.length !== question.correctAnswers.length) return false;
-      
+
       // 모든 선택한 답이 정답에 포함되어야 함
-      return answer.every(ans => question.correctAnswers.includes(ans)) &&
-             question.correctAnswers.every(correct => answer.includes(correct));
+      return (
+        answer.every((ans) => question.correctAnswers.includes(ans)) &&
+        question.correctAnswers.every((correct) => answer.includes(correct))
+      );
     } else {
       // 단일 선택: 기존 로직
       const answerToCheck = Array.isArray(answer) ? answer[0] : answer;
-      return answerToCheck !== null && question.correctAnswers.includes(answerToCheck);
+      return (
+        answerToCheck !== null &&
+        question.correctAnswers.includes(answerToCheck)
+      );
     }
   },
 
   drag: (question: DragDropQuestion, answer: DragDropAnswer): boolean => {
     if (!answer || !Array.isArray(question.correctPairs)) return false;
-    
+
     const answerEntries = Object.entries(answer);
     return (
       answerEntries.length === question.correctPairs.length &&
@@ -55,21 +65,21 @@ const answerCheckers = {
 
   match: (question: MatchingQuestion, answer: MatchingAnswer): boolean => {
     if (!answer) return false;
-    
+
     return Object.entries(question.correctMatches).every(
-      ([key, val]) => answer[key] === val
+      ([key, val]) => answer[key] === val,
     );
-  }
+  },
 };
 
 // 답안 완성도 확인 함수들
 const completenessCheckers = {
   choice: (question: ChoiceQuestion, answer: ChoiceAnswer): boolean => {
     if (!answer) return false;
-    
+
     // 다중 선택인지 확인
     const isMultipleChoice = question.correctAnswers.length > 1;
-    
+
     if (isMultipleChoice) {
       // 다중 선택: 최소 1개 이상 선택되어야 함
       return Array.isArray(answer) && answer.length > 0;
@@ -80,12 +90,18 @@ const completenessCheckers = {
   },
 
   drag: (question: DragDropQuestion, answer: DragDropAnswer): boolean => {
-    return answer !== null && Object.keys(answer).length === question.leftLabels.length;
+    return (
+      answer !== null &&
+      Object.keys(answer).length === question.leftLabels.length
+    );
   },
 
   match: (question: MatchingQuestion, answer: MatchingAnswer): boolean => {
-    return answer !== null && Object.keys(answer).length === question.pairs.left.length;
-  }
+    return (
+      answer !== null &&
+      Object.keys(answer).length === question.pairs.left.length
+    );
+  },
 };
 
 export default function QuestionRenderer({ questions, onComplete }: Props) {
@@ -122,7 +138,7 @@ export default function QuestionRenderer({ questions, onComplete }: Props) {
   // 다음 문제로 이동
   const goToNext = (): void => {
     const nextIndex = currentIndex + 1;
-    
+
     if (nextIndex < questions.length) {
       setCurrentIndex(nextIndex);
       setUserAnswer(null);
@@ -133,14 +149,16 @@ export default function QuestionRenderer({ questions, onComplete }: Props) {
   };
 
   // 문제 컴포넌트 렌더링
+  // renderQuestionComponent 함수 수정
   const renderQuestionComponent = () => {
     switch (currentQuestion.type) {
       case 'choice': {
         const choiceQuestion = currentQuestion as ChoiceQuestion;
-        
+
         if (choiceQuestion.media?.type === 'fraction-circle') {
           return (
             <FractionCircleQuestionCanvas
+              key={currentQuestion.id}
               question={choiceQuestion}
               onAnswer={setUserAnswer}
               userAnswer={userAnswer as string[] | null}
@@ -148,9 +166,10 @@ export default function QuestionRenderer({ questions, onComplete }: Props) {
             />
           );
         }
-        
+
         return (
           <ChoiceQuestionCanvas
+            key={currentQuestion.id}
             question={currentQuestion}
             onAnswer={(answer: string) => {
               // 기존 단일 선택 문제는 배열로 래핑
@@ -161,27 +180,29 @@ export default function QuestionRenderer({ questions, onComplete }: Props) {
           />
         );
       }
-      
+
       case 'drag':
         return (
           <DragDropQuestionCanvas
+            key={currentQuestion.id}
             question={currentQuestion}
             onDrop={setUserAnswer}
             userAnswer={userAnswer}
             feedbackVisible={feedbackVisible}
           />
         );
-      
+
       case 'match':
         return (
           <MatchingQuestionCanvas
+            key={currentQuestion.id}
             question={currentQuestion}
             onMatch={setUserAnswer}
             userAnswer={userAnswer}
             feedbackVisible={feedbackVisible}
           />
         );
-      
+
       default:
         return null;
     }
