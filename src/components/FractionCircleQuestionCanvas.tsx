@@ -1,18 +1,7 @@
+import type { ChoiceQuestion } from '../types/question';
+
 interface Props {
-  question: {
-    id: string;
-    prompt: string;
-    options: string[];
-    correctAnswers: string[];
-    media: {
-      type: 'fraction-circle';
-      totalParts: number;
-      filledParts: number;
-      radius: number;
-      fillColor: string;
-      strokeColor: string;
-    };
-  };
+  question: ChoiceQuestion;
   onAnswer: (selected: string) => void;
   userAnswer?: string;
   feedbackVisible?: boolean;
@@ -24,6 +13,11 @@ export default function FractionCircleQuestionCanvas({
   userAnswer,
   feedbackVisible = false,
 }: Props) {
+  if (!question.media || question.media.type !== 'fraction-circle') {
+    throw new Error(
+      'FractionCircleQuestionCanvas: media must be of type fraction-circle',
+    );
+  }
   const { totalParts, filledParts, radius, fillColor, strokeColor } =
     question.media;
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import ChoiceQuestionCanvas from '../components/ChoiceQuestionCanvas';
 // import DragDropQuestionCanvas from '../components/DragDropQuestionCanvas';
 import FractionCircleQuestionCanvas from '../components/FractionCircleQuestionCanvas';
@@ -6,7 +6,7 @@ import MatchingQuestionCanvas from '../components/MatchingQuestionCanvas';
 // import SlotDragQuestionCanvas from '../components/SlotDragQuestionCanvas';
 import useResultStore from '../stores/useResultStore';
 import useToastStore from '../stores/useToastStore';
-import type { InteractiveQuestion } from '../types/question';
+import type { ChoiceQuestion, InteractiveQuestion } from '../types/question';
 
 interface Props {
   questions: InteractiveQuestion[];
@@ -14,59 +14,62 @@ interface Props {
 }
 
 export default function QuestionRenderer({ questions, onComplete }: Props) {
-  const [index, setIndex] = useState(0);
+  const [currentIndex, seCurrentIndex] = useState(0);
+  const currentQuestion = questions[currentIndex];
   // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   const [userAnswer, setUserAnswer] = useState<any>(null);
   const [feedbackVisible, setFeedbackVisible] = useState(false);
 
-  const { addResult } = useResultStore();
+  const { total, addResult } = useResultStore();
   const { addToast } = useToastStore();
 
-  const current = questions[index];
-
+  // 현재 문제의 답변이 완전한지 여부를 판단하는 함수
   const isAnswerComplete = (() => {
-    if (current.type === 'choice') {
+    if (currentQuestion.type === 'choice') {
       return userAnswer !== null;
     }
-    if (current.type === 'drag') {
+    if (currentQuestion.type === 'drag') {
       return (
         userAnswer &&
-        Object.keys(userAnswer).length === current.draggableItems.length
+        Object.keys(userAnswer).length === currentQuestion.draggableItems.length
       );
     }
-    if (current.type === 'slot-drag') {
+    if (currentQuestion.type === 'slot-drag') {
       return (
         userAnswer &&
         Object.keys(userAnswer).length ===
-          current.slots.filter((s) => !s.preset).length
+          currentQuestion.slots.filter((s) => !s.preset).length
       );
     }
-    if (current.type === 'match') {
+    if (currentQuestion.type === 'match') {
       return (
         userAnswer &&
-        Object.keys(userAnswer).length === current.pairs.left.length
+        Object.keys(userAnswer).length === currentQuestion.pairs.left.length
       );
     }
     return false;
   })();
 
+  // 정답을 확인하고 피드백을 표시하는 함수
   const checkAnswer = () => {
+    // TODO: isCorrect 초기값을 false로 설정해도 괜찮은지 고민
     let isCorrect = false;
 
-    if (current.type === 'choice') {
-      isCorrect = current.correctAnswers.includes(userAnswer);
-    } else if (current.type === 'drag') {
-      isCorrect = Object.entries(current.correctPlacements).every(
+    if (currentQuestion.type === 'choice') {
+      isCorrect = currentQuestion.correctAnswers.includes(userAnswer);
+    } else if (currentQuestion.type === 'drag') {
+      isCorrect = Object.entries(currentQuestion.correctPlacements).every(
         ([key, val]) => userAnswer[key] === val,
       );
-    } else if (current.type === 'match') {
-      isCorrect = Object.entries(current.correctMatches).every(
+    } else if (currentQuestion.type === 'match') {
+      isCorrect = Object.entries(currentQuestion.correctMatches).every(
         ([key, val]) => userAnswer[key] === val,
       );
     }
 
     setFeedbackVisible(true);
-    addResult({ id: current.id, isCorrect });
+    addResult({ id: currentQuestion.id, isCorrect });
+
     if (isCorrect) {
       addToast('훌륭해요! 🎉', 'success');
     } else {
@@ -75,9 +78,9 @@ export default function QuestionRenderer({ questions, onComplete }: Props) {
   };
 
   const goToNext = () => {
-    const next = index + 1;
+    const next = currentIndex + 1;
     if (next < questions.length) {
-      setIndex(next);
+      seCurrentIndex(next);
       setUserAnswer(null);
       setFeedbackVisible(false);
     } else {
@@ -85,66 +88,61 @@ export default function QuestionRenderer({ questions, onComplete }: Props) {
     }
   };
 
-  // useEffect(() => {
-  //   console.log('[DEBUG] userAnswer changed:', userAnswer);
-  // }, [userAnswer]);
-
-  const progressPercentage = ((index + 1) / questions.length) * 100;
+  const progressPercentage = ((currentIndex + 1) / total) * 100;
 
   return (
     <div className='w-screen min-h-screen bg-gradient-to-b from-[#B6E3FF] to-[#D5F8CE] flex flex-col items-center justify-start px-6 py-10 gap-8'>
       <div className='w-full max-w-5xl'>
         <div className='text-2xl font-extrabold text-[#444] mb-2'>
-          문제 {index + 1} / {questions.length}
+          문제 {currentIndex + 1} / {total}
         </div>
         <div className='w-full h-5 bg-yellow-100 rounded-full overflow-hidden'>
-          {/* biome-ignore lint/style/useSelfClosingElements: <explanation> */}
           <div
             className='h-full bg-yellow-300 transition-all duration-500'
             style={{ width: `${progressPercentage}%` }}
-          ></div>
+          />
         </div>
       </div>
 
       <div className='w-full max-w-5xl bg-white rounded-3xl shadow-xl p-8'>
-        {current.type === 'choice' &&
-          (current.media?.type === 'fraction-circle' ? (
+        {currentQuestion.type === 'choice' &&
+          (currentQuestion.media?.type === 'fraction-circle' ? (
             <FractionCircleQuestionCanvas
-              question={current}
+              question={currentQuestion as ChoiceQuestion}
               onAnswer={setUserAnswer}
               userAnswer={userAnswer}
               feedbackVisible={feedbackVisible}
             />
           ) : (
             <ChoiceQuestionCanvas
-              question={current}
+              question={currentQuestion}
               onAnswer={setUserAnswer}
               userAnswer={userAnswer}
               feedbackVisible={feedbackVisible}
             />
           ))}
 
-        {/* {current.type === 'drag' && (
+        {/* {currentQuestion.type === 'drag' && (
           <DragDropQuestionCanvas
-            question={current}
+            question={currentQuestion}
             onDrop={setUserAnswer}
             userAnswer={userAnswer}
             feedbackVisible={feedbackVisible}
           />
         )}
 
-        {current.type === 'slot-drag' && (
+        {currentQuestion.type === 'slot-drag' && (
           <SlotDragQuestionCanvas
-            question={current}
+            question={currentQuestion}
             onDrop={setUserAnswer}
             userAnswer={userAnswer}
             feedbackVisible={feedbackVisible}
           />
         )} */}
 
-        {current.type === 'match' && (
+        {currentQuestion.type === 'match' && (
           <MatchingQuestionCanvas
-            question={current}
+            question={currentQuestion}
             onMatch={setUserAnswer}
             userAnswer={userAnswer}
             feedbackVisible={feedbackVisible}

@@ -5,8 +5,8 @@ export const questionData: InteractiveQuestion[] = [
     id: 'math4',
     type: 'choice',
     question: '다음 덧셈을 하세요.',
-    expression: '6 + 1 = ?',
-    options: ['5', '6', '7', '8'],
+    prompt: '6 + 1 = ?',
+    options: ['5', '6', '7', '8', '9', '10'],
     correctAnswers: ['7'],
     media: {
       type: 'dots',

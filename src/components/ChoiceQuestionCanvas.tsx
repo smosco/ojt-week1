@@ -1,16 +1,8 @@
 import { useMemo } from 'react';
+import type { ChoiceQuestion } from '../types/question';
 
 interface Props {
-  question: {
-    id: string;
-    prompt: string;
-    options: string[];
-    correctAnswers: string[];
-    media: {
-      type: 'dots';
-      groups: number[];
-    };
-  };
+  question: ChoiceQuestion;
   onAnswer: (selected: string) => void;
   userAnswer?: string;
   feedbackVisible?: boolean;
@@ -42,67 +34,66 @@ export default function ChoiceQuestionCanvas({
     const result: React.ReactNode[] = [];
     let offsetX = 0;
 
-    question.media.groups.forEach((count, groupIdx) => {
-      const groupWidth = count * (dotRadius * 2 + spacing) - spacing;
-      const startX = offsetX;
+    if (question.media && question.media.type === 'dots') {
+      const media = question.media;
+      media.groups.forEach((count, groupIdx) => {
+        const groupWidth = count * (dotRadius * 2 + spacing) - spacing;
+        const startX = offsetX;
 
-      // 배경 테두리
-      result.push(
-        <rect
-          key={`group-bg-${
-            // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
-            groupIdx
-          }`}
-          x={startX - 12}
-          y={44}
-          rx={20}
-          ry={20}
-          width={groupWidth + 24}
-          height={44}
-          fill='#fff'
-          stroke={colors[groupIdx % colors.length]}
-          strokeWidth={2}
-        />,
-      );
-
-      // 동그라미들
-      for (let i = 0; i < count; i++) {
-        const cx = startX + i * (dotRadius * 2 + spacing) + dotRadius;
         result.push(
-          <circle
-            key={`g${groupIdx}-d${i}`}
-            cx={cx}
-            cy={66}
-            r={dotRadius}
-            fill={colors[groupIdx % colors.length]}
-          />,
-        );
-      }
-
-      offsetX += groupWidth + groupGap;
-
-      // 더하기 기호
-      if (groupIdx < question.media.groups.length - 1) {
-        result.push(
-          <text
-            key={`plus-${
+          <rect
+            key={`group-bg-${
               // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
               groupIdx
             }`}
-            x={offsetX - groupGap / 2}
-            y={66}
-            fontSize={28}
-            textAnchor='middle'
-            dominantBaseline='middle'
-            fill='#FFB703'
-            fontWeight='bold'
-          >
-            +
-          </text>,
+            x={startX - 12}
+            y={44}
+            rx={20}
+            ry={20}
+            width={groupWidth + 24}
+            height={44}
+            fill='#fff'
+            stroke={colors[groupIdx % colors.length]}
+            strokeWidth={2}
+          />,
         );
-      }
-    });
 
+        for (let i = 0; i < count; i++) {
+          const cx = startX + i * (dotRadius * 2 + spacing) + dotRadius;
+          result.push(
+            <circle
+              key={`g${groupIdx}-d${i}`}
+              cx={cx}
+              cy={66}
+              r={dotRadius}
+              fill={colors[groupIdx % colors.length]}
+            />,
+          );
+        }
+
+        offsetX += groupWidth + groupGap;
+
+        if (groupIdx < media.groups.length - 1) {
+          result.push(
+            <text
+              key={`plus-${
+                // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
+                groupIdx
+              }`}
+              x={offsetX - groupGap / 2}
+              y={66}
+              fontSize={28}
+              textAnchor='middle'
+              dominantBaseline='middle'
+              fill='#FFB703'
+              fontWeight='bold'
+            >
+              +
+            </text>,
+          );
+        }
+      });
+    }
     return result;
   }, [question]);
 
@@ -112,19 +103,23 @@ export default function ChoiceQuestionCanvas({
         {question.prompt}
       </h2>
 
-      {/* biome-ignore lint/a11y/noSvgWithoutTitle: <explanation> */}
-      <svg
-        width='100%'
-        height='120'
-        viewBox='0 0 500 120'
-        className='max-w-3xl'
-      >
-        {svgGroups}
-      </svg>
+      {question.media?.type === 'dots' && (
+        <svg
+          width='100%'
+          height='120'
+          viewBox='0 0 500 120'
+          className='max-w-3xl'
+        >
+          <title>점 그룹 시각화</title>
+          {svgGroups}
+        </svg>
+      )}
 
-      <div className='text-2xl font-bold text-[#333]'>
-        {question.media.groups.join(' + ')} = ?
-      </div>
+      {question.media?.type === 'dots' && (
+        <div className='text-2xl font-bold text-[#333]'>
+          {question.media.groups.join(' + ')} = ?
+        </div>
+      )}
 
       <div className='grid grid-cols-2 gap-4 w-full max-w-md'>
         {question.options.map((opt) => (

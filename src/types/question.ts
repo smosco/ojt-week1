@@ -11,7 +11,6 @@ export type ChoiceQuestion = {
   type: 'choice';
   question: string;
   prompt?: string;
-  expression?: string;
   options: string[];
   correctAnswers: string[];
   media?: DotsMedia | FractionCircleMedia | ClockMedia;
