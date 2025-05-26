@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import ChoiceQuestionCanvas from '../components/ChoiceQuestionCanvas';
-// import DragDropQuestionCanvas from '../components/DragDropQuestionCanvas';
 import FractionCircleQuestionCanvas from '../components/FractionCircleQuestionCanvas';
 import MatchingQuestionCanvas from '../components/MatchingQuestionCanvas';
-import SlotDragQuestionCanvas from '../components/SlotDragQuestionCanvas';
+import DragDropQuestionCanvas from './DragDropQuestionCanvas';
 import useResultStore from '../stores/useResultStore';
 import useToastStore from '../stores/useToastStore';
 import type { ChoiceQuestion, InteractiveQuestion } from '../types/question';
@@ -31,12 +30,6 @@ export default function QuestionRenderer({ questions, onComplete }: Props) {
     if (currentQuestion.type === 'drag') {
       return (
         userAnswer &&
-        Object.keys(userAnswer).length === currentQuestion.draggableItems.length
-      );
-    }
-    if (currentQuestion.type === 'slot-drag') {
-      return (
-        userAnswer &&
         Object.keys(userAnswer).length === currentQuestion.leftLabels.length
       );
     }
@@ -57,10 +50,6 @@ export default function QuestionRenderer({ questions, onComplete }: Props) {
     if (currentQuestion.type === 'choice') {
       isCorrect = currentQuestion.correctAnswers.includes(userAnswer);
     } else if (currentQuestion.type === 'drag') {
-      isCorrect = Object.entries(currentQuestion.correctPlacements).every(
-        ([key, val]) => userAnswer[key] === val,
-      );
-    } else if (currentQuestion.type === 'slot-drag') {
       // slot-drag 정답 체크: 모든 slot-label에 대해 userAnswer[slot] === word 인지 확인
       isCorrect =
         Array.isArray(currentQuestion.correctPairs) &&
@@ -132,17 +121,8 @@ export default function QuestionRenderer({ questions, onComplete }: Props) {
             />
           ))}
 
-        {/* {currentQuestion.type === 'drag' && (
+        {currentQuestion.type === 'drag' && (
           <DragDropQuestionCanvas
-            question={currentQuestion}
-            onDrop={setUserAnswer}
-            userAnswer={userAnswer}
-            feedbackVisible={feedbackVisible}
-          />
-        )} */}
-
-        {currentQuestion.type === 'slot-drag' && (
-          <SlotDragQuestionCanvas
             question={currentQuestion}
             onDrop={setUserAnswer}
             userAnswer={userAnswer}

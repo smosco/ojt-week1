@@ -2,7 +2,7 @@
 export type InteractiveQuestion =
   | ChoiceQuestion
   | DragDropQuestion
-  | SlotDragQuestion
+  | DragDropQuestion
   | MatchingQuestion;
 
 // 선택형 문제
@@ -17,24 +17,24 @@ export type ChoiceQuestion = {
 };
 
 // 드래그앤드롭 문제
-export type DragDropQuestion = {
+export interface DragDropQuestion {
   id: string;
   type: 'drag';
   question: string;
-  draggableItems: string[];
-  dropZones: string[] | DropZoneLabel[];
-  correctPlacements: Record<string, string>;
-  media?: ObjectIconsMedia | CategoryBoxesMedia | DropZoneMedia;
-};
-
-export interface SlotDragQuestion {
-  id: string;
-  type: 'slot-drag';
-  question: string;
-  leftLabels: string[]; // 드롭 슬롯에 대응되는 좌측 라벨들
-  options: string[]; // 아래에 드래그 가능한 단어들
-  correctPairs: [string, string][]; // [leftLabel, option]의 정답쌍
+  leftLabels: string[]; // 드래그 가능한 항목들
+  options: string[]; // 슬롯들 (ex: 예각, 직각, 둔각)
+  correctPairs: [string, string][]; // [항목, 정답 슬롯]
+  media?: ImageItemsMedia;
 }
+
+// 이미지 기반 드래그 항목
+export type ImageItemsMedia = {
+  type: 'image-items';
+  items: {
+    label: string;
+    image: string; // 예: '/images/angle_30.png'
+  }[];
+};
 
 // 선 연결형 문제
 export type MatchingQuestion = {
