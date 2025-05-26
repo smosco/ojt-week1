@@ -91,9 +91,10 @@ export default function QuestionRenderer({ questions, onComplete }: Props) {
   const progressPercentage = ((currentIndex + 1) / total) * 100;
 
   return (
-    <div className='w-screen min-h-screen bg-gradient-to-b from-[#B6E3FF] to-[#D5F8CE] flex flex-col items-center justify-start px-6 py-10 gap-8'>
+    <div className='min-h-screen bg-gradient-to-b from-[#B6E3FF] to-[#D5F8CE] flex flex-col items-center justify-start px-6 py-10 gap-8'>
+      {/* 탑 : 현재 문제 진행 상황 표시 */}
       <div className='w-full max-w-5xl'>
-        <div className='text-2xl font-extrabold text-[#444] mb-2'>
+        <div className='text-2xl font-bold text-[#444] mb-2'>
           문제 {currentIndex + 1} / {total}
         </div>
         <div className='w-full h-5 bg-yellow-100 rounded-full overflow-hidden'>
@@ -104,7 +105,8 @@ export default function QuestionRenderer({ questions, onComplete }: Props) {
         </div>
       </div>
 
-      <div className='w-full max-w-5xl bg-white rounded-3xl shadow-xl p-8'>
+      {/* 미들 : 문제 */}
+      <div className='w-full max-w-5xl bg-white rounded-3xl shadow-xl px-8 py-16'>
         {currentQuestion.type === 'choice' &&
           (currentQuestion.media?.type === 'fraction-circle' ? (
             <FractionCircleQuestionCanvas
@@ -150,13 +152,14 @@ export default function QuestionRenderer({ questions, onComplete }: Props) {
         )}
       </div>
 
+      {/* 하단 : 정답 확인 버튼 */}
       <div className='mt-4'>
         {!feedbackVisible ? (
           <button
             type='button'
             onClick={checkAnswer}
             disabled={!isAnswerComplete}
-            className='px-10 py-3 text-lg font-bold rounded-full shadow-md transition-all duration-200 text-white disabled:opacity-50 disabled:cursor-not-allowed bg-yellow-300 hover:bg-yellow-400'
+            className='px-10 py-3 text-2xl font-bold rounded-full shadow-md transition-all duration-200 text-white disabled:opacity-50 disabled:cursor-not-allowed bg-yellow-400 hover:bg-yellow-500'
           >
             정답 확인
           </button>
@@ -164,7 +167,7 @@ export default function QuestionRenderer({ questions, onComplete }: Props) {
           <button
             type='button'
             onClick={goToNext}
-            className='px-10 py-3 text-lg font-bold rounded-full shadow-md transition-all duration-200 text-white bg-yellow-300 hover:bg-yellow-400'
+            className='px-10 py-3 text-2xl font-bold rounded-full shadow-md transition-all duration-200 text-white bg-yellow-400 hover:bg-yellow-500'
           >
             다음 문제
           </button>
