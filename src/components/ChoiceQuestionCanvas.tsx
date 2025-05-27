@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import type { BaseQuestionProps } from '../types/common';
-import { baseButtonClasses, getAnswerButtonStyle } from '../types/common';
 import type { ChoiceQuestion } from '../types/question';
+import { baseButtonClasses, getAnswerButtonStyle } from '../utils/style';
 
 interface Props extends BaseQuestionProps<string> {
   question: ChoiceQuestion;
@@ -13,16 +13,16 @@ export default function ChoiceQuestionCanvas({
   userAnswer,
   feedbackVisible = false,
 }: Props) {
-  // 점 그룹 SVG 렌더링
+  // 점 그룹 SVG 렌더링 함수
   const dotsVisualization = useMemo(() => {
     if (!question.media || question.media.type !== 'dots') {
       return null;
     }
 
     const media = question.media;
-    const dotRadius = media.dotRadius || 16;
-    const dotSpacing = media.dotSpacing || 10;
-    const groupSpacing = media.groupSpacing || 60;
+    const dotRadius = media.dotRadius || 18;
+    const dotSpacing = media.dotSpacing || 24;
+    const groupSpacing = media.groupSpacing || 120;
 
     let offsetX = 50; // 시작 위치
     const elements: React.ReactNode[] = [];
@@ -114,7 +114,7 @@ export default function ChoiceQuestionCanvas({
         </g>,
       );
 
-      // 점들을 애니메이션과 함께 렌더링
+      // 점들을 렌더링
       for (let dotIndex = 0; dotIndex < dotCount; dotIndex++) {
         const cx =
           groupStartX + dotIndex * (dotRadius * 2 + dotSpacing) + dotRadius;
@@ -175,7 +175,6 @@ export default function ChoiceQuestionCanvas({
               <line x1={plusX} y1={62} x2={plusX} y2={78} />
             </g>
 
-            {/* 펄스 애니메이션 */}
             <circle
               cx={plusX}
               cy={70}

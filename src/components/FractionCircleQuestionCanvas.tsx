@@ -1,42 +1,14 @@
 import { useMemo } from 'react';
-import { baseButtonClasses } from '../types/common';
 import type { BaseQuestionProps } from '../types/common';
 import type { ChoiceQuestion } from '../types/question';
+import {
+  baseButtonClasses,
+  getMultipleAnswerButtonStyle,
+} from '../utils/style';
 
 interface Props extends BaseQuestionProps<string[]> {
   question: ChoiceQuestion;
 }
-
-// 다중 선택을 위한 버튼 스타일 함수
-const getMultipleAnswerButtonStyle = (
-  option: string,
-  userAnswer: string[] | undefined,
-  correctAnswers: string[],
-  feedbackVisible: boolean,
-): string => {
-  const isSelected = userAnswer?.includes(option) || false;
-  const isCorrect = correctAnswers.includes(option);
-
-  if (feedbackVisible) {
-    if (isCorrect && isSelected) {
-      return 'bg-green-500 text-white border-green-600'; // 정답이면서 선택함
-    }
-    if (isCorrect && !isSelected) {
-      return 'bg-green-200 text-green-800 border-green-400'; // 정답인데 선택 안함
-    }
-    if (!isCorrect && isSelected) {
-      return 'bg-red-500 text-white border-red-600'; // 오답인데 선택함
-    }
-    return 'bg-gray-100 text-gray-600 border-gray-300'; // 오답이면서 선택 안함
-  }
-
-  // 피드백 전 상태
-  if (isSelected) {
-    return 'bg-blue-500 text-white border-blue-600 shadow-lg transform scale-105';
-  }
-
-  return 'bg-white text-gray-700 border-gray-300 hover:bg-blue-50 hover:border-blue-300';
-};
 
 export default function FractionCircleQuestionCanvas({
   question,
@@ -77,7 +49,6 @@ export default function FractionCircleQuestionCanvas({
   // 복잡한 SVG 원형 차트 생성 (기존 코드와 동일)
   const fractionVisualization = useMemo(() => {
     const center = { x: 150, y: 150 };
-    const innerRadius = radius * 0.6;
     const outerRadius = radius;
 
     const elements: React.ReactNode[] = [];
