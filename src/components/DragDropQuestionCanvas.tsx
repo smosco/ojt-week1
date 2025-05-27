@@ -228,7 +228,9 @@ export default function DragDropQuestionCanvas({
       });
     });
 
-    return () => canvas.dispose();
+    return () => {
+      canvas.dispose();
+    };
   }, [question]);
 
   useEffect(() => {
