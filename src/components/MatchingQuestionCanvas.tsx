@@ -32,14 +32,14 @@ export default function MatchingQuestionCanvas({
   const removeExistingLine = (from?: string, to?: string) => {
     const canvas = fabricCanvas.current;
     if (!canvas) return;
-    
+
     console.log('Removing lines for from:', from, 'to:', to); // 디버깅용
-    
+
     linesRef.current = linesRef.current.filter((line) => {
       const l = line as LineWithData;
       const isMatch =
         (from && l.data?.from === from) || (to && l.data?.to === to);
-      
+
       if (isMatch) {
         console.log('Removing line:', l.data); // 디버깅용
         try {
@@ -72,7 +72,7 @@ export default function MatchingQuestionCanvas({
     const leftX = 120;
     const rightX = 680;
     const startY = 80;
-    const gapY = 80;
+    const gapY = 120;
 
     question.pairs.left.forEach((label, i) => {
       const y = startY + i * gapY;
@@ -80,7 +80,7 @@ export default function MatchingQuestionCanvas({
       const text = new FabricText(label, {
         left: leftX,
         top: y,
-        fontSize: 22,
+        fontSize: 32,
         fontWeight: 'bold',
         fill: '#333',
         originX: 'left',
@@ -90,7 +90,8 @@ export default function MatchingQuestionCanvas({
       });
 
       const point = new Circle({
-        left: leftX + (text.width || 0) + 20,
+        // TODO: 점을 텍스트 길이에 상관없이 같은 위치에 배치
+        left: leftX + 150,
         top: y,
         radius: 10,
         fill: '#7DD3FC',
@@ -104,14 +105,14 @@ export default function MatchingQuestionCanvas({
 
       point.on('mousedown', () => {
         console.log('Left point mousedown triggered for:', label); // 디버깅용
-        
+
         if (feedbackVisible) {
           console.log('Feedback visible, ignoring mousedown');
           return;
         }
 
         // 현재 matches 상태를 가져와서 확인
-        setMatches(currentMatches => {
+        setMatches((currentMatches) => {
           if (currentMatches[label]) {
             console.log('Removing existing line for:', label);
             removeExistingLine(label);
@@ -124,7 +125,7 @@ export default function MatchingQuestionCanvas({
 
         console.log('Starting new line from:', label); // 디버깅용
         startLabel.current = label;
-        
+
         const line = new Line(
           [point.left || 0, point.top || 0, point.left || 0, point.top || 0],
           {
@@ -150,7 +151,7 @@ export default function MatchingQuestionCanvas({
       const text = new FabricText(label, {
         left: rightX,
         top: y,
-        fontSize: 22,
+        fontSize: 30,
         fontWeight: 'bold',
         fill: '#333',
         originX: 'right',
@@ -160,7 +161,7 @@ export default function MatchingQuestionCanvas({
       });
 
       const point = new Circle({
-        left: rightX - (text.width || 0) - 20,
+        left: rightX - 100,
         top: y,
         radius: 10,
         fill: '#FBCFE8',
@@ -174,7 +175,7 @@ export default function MatchingQuestionCanvas({
 
       point.on('mouseup', () => {
         console.log('Right point mouseup triggered for:', label); // 디버깅용
-        
+
         if (feedbackVisible) {
           console.log('Feedback visible, ignoring');
           return;
@@ -182,7 +183,7 @@ export default function MatchingQuestionCanvas({
 
         const start = startLabel.current;
         console.log('Start label:', start); // 디버깅용
-        
+
         if (!start || !leftPoints.current[start]) {
           console.log('No start label or left point');
           return;
@@ -202,7 +203,7 @@ export default function MatchingQuestionCanvas({
 
         if (currentLine.current) {
           console.log('Creating connection from', start, 'to', label); // 디버깅용
-          
+
           currentLine.current.set({ x2: to.left, y2: to.top });
           (currentLine.current as LineWithData).data = {
             from: start,
@@ -231,7 +232,7 @@ export default function MatchingQuestionCanvas({
 
     canvas.on('mouse:move', (opt) => {
       if (currentLine.current) {
-        const pointer = canvas.getPointer(opt.e);
+        const pointer = canvas.getViewportPoint(opt.e);
         currentLine.current.set({ x2: pointer.x, y2: pointer.y });
         canvas.requestRenderAll();
       }
@@ -240,12 +241,14 @@ export default function MatchingQuestionCanvas({
     // 전역 마우스 업 이벤트 추가 (연결 취소용)
     canvas.on('mouse:up', (opt) => {
       if (!currentLine.current) return;
-      
+
       // 오른쪽 점 위가 아닌 곳에서 마우스 업 시 임시 선 제거
       const target = opt.target;
-      const isRightPoint = target && rightPoints.current && 
+      const isRightPoint =
+        target &&
+        rightPoints.current &&
         Object.values(rightPoints.current).includes(target as Circle);
-      
+
       if (!isRightPoint) {
         canvas.remove(currentLine.current);
         currentLine.current = null;
@@ -289,18 +292,19 @@ export default function MatchingQuestionCanvas({
   }, [feedbackVisible, userAnswer]);
 
   return (
-    <div className="flex flex-col items-center gap-4">
-      <h2 className="text-2xl font-extrabold text-gray-800 text-center">
+    <div className='flex flex-col items-center gap-4'>
+      <h2 className='text-4xl font-extrabold text-gray-800 text-center'>
         {question.question}
       </h2>
-      
+
       <canvas ref={canvasRef} />
-      
+
       {!feedbackVisible && (
-        <div className="text-sm text-gray-500 text-center">
+        <div className='text-lg text-gray-500 text-center'>
           💡 왼쪽 항목을 클릭한 후 오른쪽 항목으로 드래그하여 연결하세요
           <br />
-          연결된 개수: {Object.keys(matches).length} / {question.pairs.left.length}
+          연결된 개수: {Object.keys(matches).length} /{' '}
+          {question.pairs.left.length}
         </div>
       )}
     </div>
