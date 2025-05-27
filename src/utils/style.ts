@@ -6,7 +6,7 @@ export const baseButtonClasses =
 // 단일 선택 문제 버튼 스타일 계산 함수
 export const getAnswerButtonStyle = (
   option: string,
-  userAnswer: string | undefined,
+  userAnswer: string | null,
   correctAnswers: string[],
   feedbackVisible: boolean,
 ): string => {
@@ -30,7 +30,7 @@ export const getAnswerButtonStyle = (
 // 다중 선택을 위한 버튼 스타일 함수
 export const getMultipleAnswerButtonStyle = (
   option: string,
-  userAnswer: string[] | undefined,
+  userAnswer: string[] | null,
   correctAnswers: string[],
   feedbackVisible: boolean,
 ): string => {

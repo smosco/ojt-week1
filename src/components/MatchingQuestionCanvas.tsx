@@ -5,7 +5,7 @@ import type { MatchingQuestion } from '../types/question';
 interface Props {
   question: MatchingQuestion;
   onMatch: (matches: Record<string, string>) => void;
-  userAnswer?: Record<string, string>;
+  userAnswer: Record<string, string> | null;
   feedbackVisible?: boolean;
 }
 
@@ -269,7 +269,7 @@ export default function MatchingQuestionCanvas({
   }, [question.id]);
 
   useEffect(() => {
-    if (!feedbackVisible || !fabricCanvas.current) return;
+    if (!feedbackVisible || !fabricCanvas.current || !userAnswer) return;
     const canvas = fabricCanvas.current;
     Object.entries(userAnswer).forEach(([from, to]) => {
       const fromPt = leftPoints.current[from];

@@ -5,7 +5,7 @@ import type { DragDropQuestion } from '../types/question';
 type Props = {
   question: DragDropQuestion;
   onDrop: (answers: Record<string, string>) => void;
-  userAnswer?: Record<string, string>;
+  userAnswer: Record<string, string> | null;
   feedbackVisible?: boolean;
 };
 
