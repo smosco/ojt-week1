@@ -1,24 +1,24 @@
 import type { InteractiveQuestion } from '../types/question';
 
 export const questionData: InteractiveQuestion[] = [
-  {
-    id: 'choice1',
-    type: 'choice',
-    question: '다음 덧셈을 하세요.',
-    prompt: '7 + 3 = ?',
-    options: ['5', '6', '7', '8', '9', '10'],
-    correctAnswers: ['10'],
-    media: {
-      type: 'dots',
-      groups: [7, 3],
-      dotRadius: 18,
-      dotSpacing: 24,
-      groupSpacing: 120,
-      dotColor: '#FF5A5A',
-      startX: 50,
-      startY: 60,
-    },
-  },
+  // {
+  //   id: 'choice1',
+  //   type: 'choice',
+  //   question: '다음 덧셈을 하세요.',
+  //   prompt: '7 + 3 = ?',
+  //   options: ['5', '6', '7', '8', '9', '10'],
+  //   correctAnswers: ['10'],
+  //   media: {
+  //     type: 'dots',
+  //     groups: [7, 3],
+  //     dotRadius: 18,
+  //     dotSpacing: 24,
+  //     groupSpacing: 120,
+  //     dotColor: '#FF5A5A',
+  //     startX: 50,
+  //     startY: 60,
+  //   },
+  // },
   {
     id: 'choice2',
     type: 'choice',
@@ -27,11 +27,11 @@ export const questionData: InteractiveQuestion[] = [
     correctAnswers: ['4/5', '7/8'],
     media: {
       type: 'fraction-circle',
-      totalParts: 4,
-      filledParts: 3, // 기준 분수: 3/4
-      radius: 40,
-      fillColor: '#4FADF7',
-      strokeColor: '#000000',
+      totalParts: 8,
+      filledParts: 5, // 기준 분수: 5/8
+      radius: 80,
+      fillColor: '#60a5fa',
+      strokeColor: '#1e40af',
       centerX: 150,
       centerY: 100,
     },
