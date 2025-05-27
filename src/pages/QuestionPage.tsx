@@ -44,9 +44,6 @@ export default function QuestionPage() {
   }
 
   return (
-    <QuestionRenderer 
-      questions={questionData} 
-      onComplete={handleComplete} 
-    />
+    <QuestionRenderer questions={questionData} onComplete={handleComplete} />
   );
 }

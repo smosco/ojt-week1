@@ -15,7 +15,7 @@ interface ResultState {
   startTime: number;
   isActive: boolean; // 퀴즈 진행 중인지 여부
 
-  // 계산된 값들 (getter 역할)
+  // 계산된 값들
   correctCount: number;
   incorrectCount: number;
   completedCount: number;
@@ -38,24 +38,6 @@ const useResultStore = create<ResultState>()(
       startTime: 0,
       isActive: false,
 
-      // 계산된 값들
-      get correctCount() {
-        return get().results.filter(r => r.isCorrect).length;
-      },
-      
-      get incorrectCount() {
-        return get().results.filter(r => !r.isCorrect).length;
-      },
-      
-      get completedCount() {
-        return get().results.length;
-      },
-      
-      get accuracyRate() {
-        const completed = get().completedCount;
-        return completed > 0 ? get().correctCount / completed : 0;
-      },
-
       // 퀴즈 시작
       start: (total) => {
         const now = Date.now();
@@ -64,7 +46,7 @@ const useResultStore = create<ResultState>()(
           total,
           results: [],
           timeInSeconds: 0,
-          isActive: true
+          isActive: true,
         });
       },
 
@@ -73,11 +55,11 @@ const useResultStore = create<ResultState>()(
         const now = Date.now();
         const newResult: QuestionResult = {
           ...result,
-          submittedAt: now
+          submittedAt: now,
         };
 
         set((state) => ({
-          results: [...state.results, newResult]
+          results: [...state.results, newResult],
         }));
       },
 
@@ -86,10 +68,10 @@ const useResultStore = create<ResultState>()(
         const { startTime } = get();
         const now = Date.now();
         const seconds = Math.max(0, Math.floor((now - startTime) / 1000));
-        
+
         set({
           timeInSeconds: seconds,
-          isActive: false
+          isActive: false,
         });
       },
 
@@ -100,14 +82,14 @@ const useResultStore = create<ResultState>()(
           results: [],
           timeInSeconds: 0,
           startTime: 0,
-          isActive: false
+          isActive: false,
         });
-      }
+      },
     }),
     {
       name: 'result-store', // devtools에서 보이는 이름
-    }
-  )
+    },
+  ),
 );
 
 // 유틸리티 훅들
@@ -116,20 +98,25 @@ export const useQuizProgress = () => {
   return {
     currentIndex: store.completedCount,
     total: store.total,
-    progressPercentage: store.total > 0 ? (store.completedCount / store.total) * 100 : 0,
-    isComplete: store.completedCount >= store.total && store.total > 0
+    progressPercentage:
+      store.total > 0 ? (store.completedCount / store.total) * 100 : 0,
+    isComplete: store.completedCount >= store.total && store.total > 0,
   };
 };
 
 export const useQuizStats = () => {
-  const store = useResultStore();
+  const { results, timeInSeconds, isActive } = useResultStore();
+  const correctCount = results.filter((r) => r.isCorrect).length;
+  const incorrectCount = results.filter((r) => !r.isCorrect).length;
+  const totalCount = results.length;
+  const accuracyRate = totalCount > 0 ? correctCount / totalCount : 0;
   return {
-    correctCount: store.correctCount,
-    incorrectCount: store.incorrectCount,
-    totalCount: store.completedCount,
-    accuracyRate: store.accuracyRate,
-    timeInSeconds: store.timeInSeconds,
-    isActive: store.isActive
+    correctCount,
+    incorrectCount,
+    totalCount,
+    accuracyRate,
+    timeInSeconds,
+    isActive,
   };
 };
 

@@ -1,24 +1,24 @@
 import type { InteractiveQuestion } from '../types/question';
 
 export const questionData: InteractiveQuestion[] = [
-  // {
-  //   id: 'choice1',
-  //   type: 'choice',
-  //   question: '다음 덧셈을 하세요.',
-  //   prompt: '7 + 3 = ?',
-  //   options: ['5', '6', '7', '8', '9', '10'],
-  //   correctAnswers: ['10'],
-  //   media: {
-  //     type: 'dots',
-  //     groups: [7, 3],
-  //     dotRadius: 18,
-  //     dotSpacing: 24,
-  //     groupSpacing: 120,
-  //     dotColor: '#FF5A5A',
-  //     startX: 50,
-  //     startY: 60,
-  //   },
-  // },
+  {
+    id: 'choice1',
+    type: 'choice',
+    question: '다음 덧셈을 하세요.',
+    prompt: '7 + 3 = ?',
+    options: ['5', '6', '7', '8', '9', '10'],
+    correctAnswers: ['10'],
+    media: {
+      type: 'dots',
+      groups: [7, 3],
+      dotRadius: 18,
+      dotSpacing: 24,
+      groupSpacing: 120,
+      dotColor: '#FF5A5A',
+      startX: 50,
+      startY: 60,
+    },
+  },
   {
     id: 'choice2',
     type: 'choice',
@@ -50,9 +50,9 @@ export const questionData: InteractiveQuestion[] = [
     media: {
       type: 'image-items',
       items: [
-        { label: '30도', image: '/images/angle_30.png' },
-        { label: '90도', image: '/images/angle_90.png' },
-        { label: '150도', image: '/images/angle_150.png' },
+        { label: '30도', image: '/images/acute.png' },
+        { label: '90도', image: '/images/right.png' },
+        { label: '150도', image: '/images/obtuse.png' },
       ],
     },
   },
@@ -61,7 +61,7 @@ export const questionData: InteractiveQuestion[] = [
     type: 'drag',
     question: '도형을 보고 한 각의 크기를 알맞게 연결하세요.',
     leftLabels: ['정삼각형', '정사각형', '정오각형'],
-    options: ['60도', '90도', '108도'],
+    options: ['60도', '108도', '90도'],
     correctPairs: [
       ['정삼각형', '60도'],
       ['정사각형', '90도'],
