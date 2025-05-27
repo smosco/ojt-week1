@@ -5,15 +5,15 @@ export const questionData: InteractiveQuestion[] = [
     id: 'choice1',
     type: 'choice',
     question: '다음 덧셈을 하세요.',
-    prompt: '6 + 1 = ?',
+    prompt: '7 + 3 = ?',
     options: ['5', '6', '7', '8', '9', '10'],
-    correctAnswers: ['7'],
+    correctAnswers: ['10'],
     media: {
       type: 'dots',
-      groups: [6, 1],
-      dotRadius: 10,
-      dotSpacing: 16,
-      groupSpacing: 24,
+      groups: [7, 3],
+      dotRadius: 18,
+      dotSpacing: 24,
+      groupSpacing: 120,
       dotColor: '#FF5A5A',
       startX: 50,
       startY: 60,
@@ -85,9 +85,9 @@ export const questionData: InteractiveQuestion[] = [
       right: ['길이', '무게', '부피'],
     },
     correctMatches: {
-      'kg': '무게',
-      'm': '길이',
-      'L': '부피',
+      kg: '무게',
+      m: '길이',
+      L: '부피',
     },
   },
   {
@@ -103,5 +103,5 @@ export const questionData: InteractiveQuestion[] = [
       '100cm': '1m',
       '1km': '1000m',
     },
-  }
+  },
 ];
