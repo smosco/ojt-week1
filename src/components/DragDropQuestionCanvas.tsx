@@ -1,5 +1,6 @@
 import { Canvas, FabricImage, FabricText, Group, Rect } from 'fabric';
 import { useEffect, useReducer, useRef, useState } from 'react';
+import { useDragDropFeedback } from '../hooks/useDragDropFeedback';
 import { dragDropReducer } from '../reducers/dragDropReducer';
 import type { DragDropQuestion } from '../types/question';
 import ResponsiveCanvasWrapper from './common/ResponsiveCanvasWrapper';
@@ -207,54 +208,15 @@ export default function DragDropQuestionCanvas({
     canvas.renderAll();
   }, [answers]);
 
-  useEffect(() => {
-    if (!feedbackVisible || !fabricCanvas.current) return;
-    const canvas = fabricCanvas.current;
-
-    for (const [slot, userWord] of Object.entries(answers)) {
-      const wordGroup = wordGroups.current.get(userWord);
-      const slotGroup = slotGroups.current.get(slot);
-      if (!wordGroup || !slotGroup) continue;
-
-      const isCorrect = question.correctPairs.some(
-        ([correctSlot, correctWord]) =>
-          correctSlot === slot && correctWord === userWord,
-      );
-
-      const color = isCorrect ? '#16a34a' : '#dc2626';
-
-      const wordRect = wordGroup.item(0) as Rect;
-      wordRect.set({ stroke: color, strokeWidth: 4 });
-
-      const slotRect = slotGroup.item(0) as Rect;
-      slotRect.set({ stroke: color, strokeWidth: 3 });
-
-      // 슬롯에 남아있는 피드백 텍스트 제거
-      slotGroup.getObjects('text').forEach((t) => {
-        const textObj = t as FabricText;
-        if (textObj.text?.startsWith('정답:')) slotGroup.remove(textObj);
-      });
-
-      if (!isCorrect) {
-        const correctAnswer = question.correctPairs.find(
-          ([s]) => s === slot,
-        )?.[1];
-        if (correctAnswer) {
-          const feedbackText = new FabricText(`정답: ${correctAnswer}`, {
-            fontSize: 16,
-            fill: '#dc2626',
-            fontWeight: 'bold',
-            originX: 'center',
-            originY: 'bottom',
-          });
-          feedbackText.top = slotGroup.top;
-          feedbackText.left = slotGroup.left + 100;
-          canvas.add(feedbackText);
-        }
-      }
-    }
-    canvas.renderAll();
-  }, [feedbackVisible]);
+  // 피드백 렌더링 훅
+  useDragDropFeedback({
+    canvas: fabricCanvas.current,
+    answers,
+    question,
+    feedbackVisible,
+    slotGroups,
+    wordGroups,
+  });
 
   return (
     <div className='flex flex-col items-center gap-4 w-full'>
