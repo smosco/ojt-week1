@@ -2,6 +2,7 @@ import { Canvas, FabricImage, FabricText, Group, Rect } from 'fabric';
 import { useEffect, useReducer, useRef, useState } from 'react';
 import { dragDropReducer } from '../reducers/dragDropReducer';
 import type { DragDropQuestion } from '../types/question';
+import ResponsiveCanvasWrapper from './common/ResponsiveCanvasWrapper';
 
 type Props = {
   question: DragDropQuestion;
@@ -14,11 +15,6 @@ export default function DragDropQuestionCanvas({
   onDrop,
   feedbackVisible,
 }: Props) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [scale, setScale] = useState(1);
-
-  const BASE_WIDTH = 900;
-
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fabricCanvas = useRef<Canvas | null>(null);
 
@@ -30,20 +26,6 @@ export default function DragDropQuestionCanvas({
   const initialPositions = useRef<Map<string, { left: number; top: number }>>(
     new Map(),
   );
-
-  // 화면 크기에 따른 스케일 조정
-  useEffect(() => {
-    const updateScale = () => {
-      if (!containerRef.current) return;
-      const parentWidth = containerRef.current.offsetWidth;
-      const newScale = Math.min(1, parentWidth / BASE_WIDTH);
-      setScale(newScale);
-    };
-
-    updateScale(); // 처음 실행
-    window.addEventListener('resize', updateScale);
-    return () => window.removeEventListener('resize', updateScale);
-  }, []);
 
   useEffect(() => {
     onDrop(answers);
@@ -279,17 +261,9 @@ export default function DragDropQuestionCanvas({
       <h2 className='text-4xl font-extrabold text-center'>
         {question.question}
       </h2>
-      <div ref={containerRef} className='w-full overflow-x-auto'>
-        <div
-          className='origin-top-left'
-          style={{
-            width: `${BASE_WIDTH}px`,
-            transform: `scale(${scale})`,
-          }}
-        >
-          <canvas ref={canvasRef} width={900} height={500} />
-        </div>
-      </div>
+      <ResponsiveCanvasWrapper width={900} height={500}>
+        <canvas ref={canvasRef} width={900} height={500} />
+      </ResponsiveCanvasWrapper>
     </div>
   );
 }
