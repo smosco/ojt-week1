@@ -1,4 +1,4 @@
-import { Canvas, FabricImage, FabricText, Group, Rect } from 'fabric';
+import { util, Canvas, FabricImage, FabricText, Group, Rect } from 'fabric';
 import { useEffect, useReducer, useRef, useState } from 'react';
 import { useDragDropFeedback } from '../hooks/useDragDropFeedback';
 import { dragDropReducer } from '../reducers/dragDropReducer';
@@ -153,16 +153,68 @@ export default function DragDropQuestionCanvas({
 
       group.on('mousedown', () => {
         if (feedbackVisible) return;
+
         ghostGroup.set('visible', true);
-        canvas.requestRenderAll();
+
+        // 드래그 시작 시 살짝 확대
+        util.animate({
+          startValue: 1,
+          endValue: 1.1,
+          duration: 150,
+          onChange: (value) => {
+            group.scaleX = value;
+            group.scaleY = value;
+            canvas.requestRenderAll();
+          },
+        });
       });
 
       group.on('mouseup', () => {
         if (feedbackVisible) return;
+
         let dropped = false;
 
         for (const [label, slot] of slotGroups.current.entries()) {
           if (group.intersectsWithObject(slot)) {
+            const { left: targetLeft, top: targetTop } = slot;
+            const startLeft = group.left!;
+            const startTop = group.top!;
+
+            // 위치 이동 애니메이션
+            util.animate({
+              startValue: startLeft,
+              endValue: targetLeft,
+              duration: 150,
+              onChange: (value) => {
+                group.set('left', value);
+                group.setCoords();
+                canvas.requestRenderAll();
+              },
+            });
+
+            util.animate({
+              startValue: startTop,
+              endValue: targetTop,
+              duration: 150,
+              onChange: (value) => {
+                group.set('top', value);
+                group.setCoords();
+                canvas.requestRenderAll();
+              },
+            });
+
+            // 드롭 후 축소 애니메이션
+            util.animate({
+              startValue: group.scaleX ?? 1.1,
+              endValue: 1,
+              duration: 150,
+              onChange: (value) => {
+                group.scaleX = value;
+                group.scaleY = value;
+                canvas.requestRenderAll();
+              },
+            });
+
             dispatch({ type: 'DROP_WORD', payload: { word, slot: label } });
             dropped = true;
             break;
@@ -170,6 +222,18 @@ export default function DragDropQuestionCanvas({
         }
 
         if (!dropped) {
+          // 실패 시 원상복구 애니메이션
+          util.animate({
+            startValue: group.scaleX ?? 1.1,
+            endValue: 1,
+            duration: 150,
+            onChange: (value) => {
+              group.scaleX = value;
+              group.scaleY = value;
+              canvas.requestRenderAll();
+            },
+          });
+
           dispatch({ type: 'REMOVE_WORD', payload: { word } });
         }
       });
