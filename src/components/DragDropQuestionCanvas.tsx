@@ -1,5 +1,6 @@
 import { Canvas, FabricImage, FabricText, Group, Rect } from 'fabric';
 import { useEffect, useReducer, useRef, useState } from 'react';
+import { dragDropReducer } from '../reducers/dragDropReducer';
 import type { DragDropQuestion } from '../types/question';
 
 type Props = {
@@ -7,41 +8,6 @@ type Props = {
   onDrop: (answers: Record<string, string>) => void;
   feedbackVisible?: boolean;
 };
-
-type AnswerMap = Record<string, string>;
-
-// Reducer
-function answersReducer(
-  state: AnswerMap,
-  action:
-    | { type: 'DROP_WORD'; payload: { word: string; slot: string } }
-    | { type: 'REMOVE_WORD'; payload: { word: string } }
-    | { type: 'RESET' },
-): AnswerMap {
-  switch (action.type) {
-    case 'DROP_WORD': {
-      const { word, slot } = action.payload;
-      const newState = { ...state };
-      Object.keys(newState).forEach((key) => {
-        if (newState[key] === word) delete newState[key];
-      });
-      newState[slot] = word;
-      return newState;
-    }
-    case 'REMOVE_WORD': {
-      const { word } = action.payload;
-      const newState = { ...state };
-      Object.keys(newState).forEach((key) => {
-        if (newState[key] === word) delete newState[key];
-      });
-      return newState;
-    }
-    case 'RESET':
-      return {};
-    default:
-      return state;
-  }
-}
 
 export default function DragDropQuestionCanvas({
   question,
@@ -56,7 +22,7 @@ export default function DragDropQuestionCanvas({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fabricCanvas = useRef<Canvas | null>(null);
 
-  const [answers, dispatch] = useReducer(answersReducer, {});
+  const [answers, dispatch] = useReducer(dragDropReducer, {});
 
   const slotGroups = useRef<Map<string, Group>>(new Map());
   const wordGroups = useRef<Map<string, Group>>(new Map());

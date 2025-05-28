@@ -267,7 +267,6 @@ export default function QuestionRenderer({ questions, onComplete }: Props) {
             key={currentQuestion.id}
             question={currentQuestion as DragDropQuestion}
             onDrop={handleDragDrop}
-            userAnswer={userAnswer as DragDropAnswer}
             feedbackVisible={feedbackVisible}
           />
         );
