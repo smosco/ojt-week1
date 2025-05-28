@@ -1,7 +1,6 @@
 import { Canvas, Circle, FabricText, Line } from 'fabric';
 import { useEffect, useRef, useState } from 'react';
 import type { MatchingQuestion } from '../types/question';
-import ResponsiveCanvasWrapper from './common/ResponsiveCanvasWrapper';
 
 interface Props {
   question: MatchingQuestion;
@@ -20,6 +19,10 @@ export default function MatchingQuestionCanvas({
   onMatch,
   feedbackVisible = false,
 }: Props) {
+  const BASE_WIDTH = 900;
+  const BASE_HEIGHT = 500;
+
+  const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fabricCanvas = useRef<Canvas | null>(null);
 
@@ -31,15 +34,14 @@ export default function MatchingQuestionCanvas({
   const startLabel = useRef<string | null>(null);
   const currentLine = useRef<Line | null>(null);
 
-  // matches로 라인 그리는 함수
   const drawLinesFromMatches = (
     canvas: Canvas,
     matches: Record<string, string>,
     feedbackVisible: boolean,
   ) => {
     lines.forEach(({ line }) => canvas.remove(line));
-
     const newLines: MatchLine[] = [];
+
     Object.entries(matches).forEach(([from, to]) => {
       const fromPt = leftPoints.current[from];
       const toPt = rightPoints.current[to];
@@ -66,33 +68,26 @@ export default function MatchingQuestionCanvas({
       canvas.sendObjectToBack(line);
       newLines.push({ from, to, line });
     });
+
     setLines(newLines);
     canvas.requestRenderAll();
   };
 
-  // 기본 라인 그림
+  // 캔버스 초기화 및 객체 추가
   useEffect(() => {
-    if (!fabricCanvas.current) return;
-    drawLinesFromMatches(fabricCanvas.current, matches, feedbackVisible);
-    onMatch(matches);
-  }, [matches, feedbackVisible]);
-
-  // 포인트 그리기 및 이벤트 등록
-  useEffect(() => {
-    if (!canvasRef.current || fabricCanvas.current) return;
-
-    const canvas = new Canvas(canvasRef.current, {
-      width: 900,
-      height: 500,
-      selection: false,
-    });
+    if (!canvasRef.current) return;
+    const canvas = new Canvas(canvasRef.current, { selection: false });
     fabricCanvas.current = canvas;
+
+    // 기본 좌표계 설정
+    canvas.setDimensions({ width: BASE_WIDTH, height: BASE_HEIGHT });
 
     const leftX = 120;
     const rightX = 780;
     const startY = 80;
     const gapY = 120;
 
+    // 왼쪽 항목
     question.pairs.left.forEach((label, i) => {
       const y = startY + i * gapY;
 
@@ -106,7 +101,6 @@ export default function MatchingQuestionCanvas({
         originX: 'left',
         originY: 'center',
         selectable: false,
-        evented: false,
       });
 
       const point = new Circle({
@@ -124,25 +118,16 @@ export default function MatchingQuestionCanvas({
 
       point.on('mousedown', () => {
         if (feedbackVisible) return;
-
-        const fromPt = point;
         startLabel.current = label;
 
         setMatches((prev) => {
           const updated = { ...prev };
-          Object.entries(updated).forEach(([from]) => {
-            if (from === label) delete updated[from];
-          });
+          delete updated[label];
           return updated;
         });
 
         const line = new Line(
-          [
-            fromPt.left ?? 0,
-            fromPt.top ?? 0,
-            fromPt.left ?? 0,
-            fromPt.top ?? 0,
-          ],
+          [point.left!, point.top!, point.left!, point.top!],
           {
             stroke: '#94A3B8',
             strokeWidth: 4,
@@ -161,6 +146,7 @@ export default function MatchingQuestionCanvas({
       canvas.add(point);
     });
 
+    // 오른쪽 항목
     question.pairs.right.forEach((label, i) => {
       const y = startY + i * gapY;
 
@@ -174,7 +160,6 @@ export default function MatchingQuestionCanvas({
         originX: 'right',
         originY: 'center',
         selectable: false,
-        evented: false,
       });
 
       const point = new Circle({
@@ -195,11 +180,10 @@ export default function MatchingQuestionCanvas({
         const start = startLabel.current;
         if (!start) return;
 
-        const toPt = point;
         if (currentLine.current) {
           currentLine.current.set({
-            x2: toPt.left ?? 0,
-            y2: toPt.top ?? 0,
+            x2: point.left!,
+            y2: point.top!,
           });
         }
 
@@ -223,7 +207,7 @@ export default function MatchingQuestionCanvas({
 
     canvas.on('mouse:move', (opt) => {
       if (currentLine.current) {
-        const pointer = canvas.getViewportPoint(opt.e);
+        const pointer = canvas.getPointer(opt.e);
         currentLine.current.set({ x2: pointer.x, y2: pointer.y });
         canvas.requestRenderAll();
       }
@@ -236,26 +220,44 @@ export default function MatchingQuestionCanvas({
       }
     });
 
+    // 줌은 모든 객체 추가 후 마지막에
+    const updateZoom = () => {
+      const container = containerRef.current;
+      if (!container) return;
+      const zoom = Math.min(container.offsetWidth / BASE_WIDTH, 1);
+      canvas.setZoom(zoom);
+      canvas.setDimensions({
+        width: BASE_WIDTH * zoom,
+        height: BASE_HEIGHT * zoom,
+      });
+    };
+
+    updateZoom();
+    window.addEventListener('resize', updateZoom);
+
     return () => {
-      fabricCanvas.current?.dispose();
+      window.removeEventListener('resize', updateZoom);
+      canvas.dispose();
       fabricCanvas.current = null;
     };
-  }, [question.id, feedbackVisible]);
+  }, [question.id]);
 
-  // 피드백 라인 그림
+  // matches나 feedbackVisible이 변경되면 라인 다시 그림
   useEffect(() => {
     if (!fabricCanvas.current) return;
     drawLinesFromMatches(fabricCanvas.current, matches, feedbackVisible);
-  }, [feedbackVisible]);
+    onMatch(matches);
+  }, [matches, feedbackVisible]);
 
   return (
     <div className='flex flex-col items-center gap-4'>
-      <h2 className='font-gmarket text-4xl font-extrabold text-center font'>
+      <h2 className='font-gmarket text-4xl font-extrabold text-center'>
         {question.question}
       </h2>
-      <ResponsiveCanvasWrapper width={900} height={500}>
+
+      <div ref={containerRef} className='w-full'>
         <canvas ref={canvasRef} />
-      </ResponsiveCanvasWrapper>
+      </div>
 
       <div className='text-lg text-gray-500 text-center'>
         💡 왼쪽 항목을 클릭한 후 오른쪽 항목으로 드래그하여 연결하세요

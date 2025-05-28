@@ -3,7 +3,6 @@ import { useEffect, useReducer, useRef, useState } from 'react';
 import { useDragDropFeedback } from '../hooks/useDragDropFeedback';
 import { dragDropReducer } from '../reducers/dragDropReducer';
 import type { DragDropQuestion } from '../types/question';
-import ResponsiveCanvasWrapper from './common/ResponsiveCanvasWrapper';
 
 type Props = {
   question: DragDropQuestion;
@@ -16,6 +15,9 @@ export default function DragDropQuestionCanvas({
   onDrop,
   feedbackVisible,
 }: Props) {
+  const BASE_WIDTH = 900;
+  const BASE_HEIGHT = 500;
+  const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fabricCanvas = useRef<Canvas | null>(null);
 
@@ -35,6 +37,33 @@ export default function DragDropQuestionCanvas({
   useEffect(() => {
     const canvas = new Canvas(canvasRef.current!, { selection: false });
     fabricCanvas.current = canvas;
+
+    // 논리 좌표계 기준 크기 설정
+    canvas.setDimensions({
+      width: BASE_WIDTH,
+      height: BASE_HEIGHT,
+    });
+
+    const updateZoom = () => {
+      const container = containerRef.current;
+      if (!container) return;
+
+      const containerWidth = container.offsetWidth;
+      const zoom = Math.min(containerWidth / BASE_WIDTH, 1); // 최대 1까지만 확대
+
+      canvas.setZoom(zoom);
+
+      // 실제 렌더링 사이즈 적용
+      canvas.setDimensions({
+        width: BASE_WIDTH * zoom,
+        height: BASE_HEIGHT * zoom,
+      });
+
+      console.log('zoom', zoom, 'containerWidth', containerWidth);
+    };
+
+    updateZoom();
+    window.addEventListener('resize', updateZoom);
 
     const SLOT_Y = 240;
     const SLOT_X_START = 100;
@@ -240,6 +269,7 @@ export default function DragDropQuestionCanvas({
     });
 
     return () => {
+      window.removeEventListener('resize', updateZoom);
       canvas.dispose();
     };
   }, [question]);
@@ -285,9 +315,9 @@ export default function DragDropQuestionCanvas({
       <h2 className='text-4xl font-extrabold text-center'>
         {question.question}
       </h2>
-      <ResponsiveCanvasWrapper width={900} height={500}>
-        <canvas ref={canvasRef} width={900} height={500} />
-      </ResponsiveCanvasWrapper>
+      <div ref={containerRef} className='w-full'>
+        <canvas ref={canvasRef} />
+      </div>
     </div>
   );
 }
