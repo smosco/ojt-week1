@@ -90,6 +90,7 @@ export default function DragDropQuestionCanvas({
     question.options.forEach((word, i) => {
       const x = OPTION_X_START + i * OPTION_GAP;
       const text = new FabricText(word, {
+        fontFamily: 'Pretedard',
         fontSize: 28,
         fill: '#374151',
         originX: 'center',

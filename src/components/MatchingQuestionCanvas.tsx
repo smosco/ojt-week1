@@ -101,6 +101,7 @@ export default function MatchingQuestionCanvas({
         top: y,
         fontSize: 32,
         fontWeight: 'bold',
+        fontFamily: 'Pretendard',
         fill: '#333',
         originX: 'left',
         originY: 'center',
@@ -168,6 +169,7 @@ export default function MatchingQuestionCanvas({
         top: y,
         fontSize: 30,
         fontWeight: 'bold',
+        fontFamily: 'Pretendard',
         fill: '#333',
         originX: 'right',
         originY: 'center',
@@ -248,7 +250,7 @@ export default function MatchingQuestionCanvas({
 
   return (
     <div className='flex flex-col items-center gap-4'>
-      <h2 className='text-4xl font-extrabold text-center'>
+      <h2 className='font-gmarket text-4xl font-extrabold text-center font'>
         {question.question}
       </h2>
       <ResponsiveCanvasWrapper width={900} height={500}>
