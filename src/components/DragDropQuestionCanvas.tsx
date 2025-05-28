@@ -159,22 +159,19 @@ export default function DragDropQuestionCanvas({
 
       group.on('mouseup', () => {
         if (feedbackVisible) return;
-        const box = group.getBoundingRect();
         let dropped = false;
+
         for (const [label, slot] of slotGroups.current.entries()) {
-          const sbox = slot.getBoundingRect();
-          const hit =
-            box.left < sbox.left + sbox.width &&
-            box.left + box.width > sbox.left &&
-            box.top < sbox.top + sbox.height &&
-            box.top + box.height > sbox.top;
-          if (hit) {
+          if (group.intersectsWithObject(slot)) {
             dispatch({ type: 'DROP_WORD', payload: { word, slot: label } });
             dropped = true;
             break;
           }
         }
-        if (!dropped) dispatch({ type: 'REMOVE_WORD', payload: { word } });
+
+        if (!dropped) {
+          dispatch({ type: 'REMOVE_WORD', payload: { word } });
+        }
       });
     });
 
@@ -206,7 +203,7 @@ export default function DragDropQuestionCanvas({
       group.set({ selectable: true, evented: true }); // ✅ 이걸 확실히
       group.setCoords(); // ✅ 필수
     }
-    canvas.renderAll();
+    canvas.requestRenderAll();
   }, [answers]);
 
   // 피드백 렌더링 훅
