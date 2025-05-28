@@ -36,46 +36,46 @@ export const questionData: InteractiveQuestion[] = [
   //     centerY: 100,
   //   },
   // },
-  {
-    id: 'drag1',
-    type: 'drag',
-    question: '각도를 보고 알맞은 분류에 끌어 놓으세요.',
-    leftLabels: ['30도', '90도', '150도'],
-    options: ['예각', '직각', '둔각'],
-    correctPairs: [
-      ['30도', '예각'],
-      ['90도', '직각'],
-      ['150도', '둔각'],
-    ],
-    media: {
-      type: 'image-items',
-      items: [
-        { label: '30도', image: '/images/acute.png' },
-        { label: '90도', image: '/images/right.png' },
-        { label: '150도', image: '/images/obtuse.png' },
-      ],
-    },
-  },
-  {
-    id: 'drag2',
-    type: 'drag',
-    question: '도형을 보고 한 각의 크기를 알맞게 연결하세요.',
-    leftLabels: ['정삼각형', '정사각형', '정오각형'],
-    options: ['60도', '108도', '90도'],
-    correctPairs: [
-      ['정삼각형', '60도'],
-      ['정사각형', '90도'],
-      ['정오각형', '108도'],
-    ],
-    media: {
-      type: 'image-items',
-      items: [
-        { label: '정삼각형', image: '/images/triangle.png' },
-        { label: '정사각형', image: '/images/square.png' },
-        { label: '정오각형', image: '/images/pentagon.png' },
-      ],
-    },
-  },
+  // {
+  //   id: 'drag1',
+  //   type: 'drag',
+  //   question: '각도를 보고 알맞은 분류에 끌어 놓으세요.',
+  //   leftLabels: ['30도', '90도', '150도'],
+  //   options: ['예각', '직각', '둔각'],
+  //   correctPairs: [
+  //     ['30도', '예각'],
+  //     ['90도', '직각'],
+  //     ['150도', '둔각'],
+  //   ],
+  //   media: {
+  //     type: 'image-items',
+  //     items: [
+  //       { label: '30도', image: '/images/acute.png' },
+  //       { label: '90도', image: '/images/right.png' },
+  //       { label: '150도', image: '/images/obtuse.png' },
+  //     ],
+  //   },
+  // },
+  // {
+  //   id: 'drag2',
+  //   type: 'drag',
+  //   question: '도형을 보고 한 각의 크기를 알맞게 연결하세요.',
+  //   leftLabels: ['정삼각형', '정사각형', '정오각형'],
+  //   options: ['60도', '108도', '90도'],
+  //   correctPairs: [
+  //     ['정삼각형', '60도'],
+  //     ['정사각형', '90도'],
+  //     ['정오각형', '108도'],
+  //   ],
+  //   media: {
+  //     type: 'image-items',
+  //     items: [
+  //       { label: '정삼각형', image: '/images/triangle.png' },
+  //       { label: '정사각형', image: '/images/square.png' },
+  //       { label: '정오각형', image: '/images/pentagon.png' },
+  //     ],
+  //   },
+  // },
   {
     id: 'match1',
     type: 'match',

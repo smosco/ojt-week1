@@ -277,7 +277,7 @@ export default function QuestionRenderer({ questions, onComplete }: Props) {
             key={currentQuestion.id}
             question={currentQuestion as MatchingQuestion}
             onMatch={handleMatching}
-            userAnswer={userAnswer as MatchingAnswer}
+            // userAnswer={userAnswer as MatchingAnswer}
             feedbackVisible={feedbackVisible}
           />
         );
