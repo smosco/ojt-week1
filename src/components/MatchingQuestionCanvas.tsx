@@ -103,7 +103,7 @@ export default function MatchingQuestionCanvas({
       const text = new FabricText(label, {
         fontSize: 20,
         fontWeight: 'bold',
-        fontFamily: 'Pretendard',
+        fontFamily: 'Pretendard, -apple-system, BlinkMacSystemFont, sans-serif',
         fill: '#0369A1',
         originX: 'left',
         originY: 'center',
@@ -190,7 +190,7 @@ export default function MatchingQuestionCanvas({
       const text = new FabricText(label, {
         fontSize: 20,
         fontWeight: 'bold',
-        fontFamily: 'Pretendard',
+        fontFamily: 'Pretendard, -apple-system, BlinkMacSystemFont, sans-serif',
         fill: '#9D174D',
         originX: 'right',
         originY: 'center',
