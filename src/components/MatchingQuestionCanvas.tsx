@@ -1,4 +1,4 @@
-import { Canvas, Circle, FabricText, Line } from 'fabric';
+import { util, Canvas, Circle, FabricText, Group, Line, Rect } from 'fabric';
 import { useEffect, useRef, useState } from 'react';
 import type { MatchingQuestion } from '../types/question';
 
@@ -73,39 +73,47 @@ export default function MatchingQuestionCanvas({
     canvas.requestRenderAll();
   };
 
-  // 캔버스 초기화 및 객체 추가
   useEffect(() => {
     if (!canvasRef.current) return;
     const canvas = new Canvas(canvasRef.current, { selection: false });
     fabricCanvas.current = canvas;
-
-    // 기본 좌표계 설정
     canvas.setDimensions({ width: BASE_WIDTH, height: BASE_HEIGHT });
 
-    const leftX = 120;
-    const rightX = 780;
+    const leftX = 80;
+    const rightX = 700;
     const startY = 80;
     const gapY = 120;
 
-    // 왼쪽 항목
     question.pairs.left.forEach((label, i) => {
       const y = startY + i * gapY;
 
-      const text = new FabricText(label, {
-        left: leftX,
-        top: y,
-        fontSize: 32,
-        fontWeight: 'bold',
-        fontFamily: 'Pretendard',
-        fill: '#333',
+      const rect = new Rect({
+        width: 120,
+        height: 50,
+        fill: '#E0F2FE',
+        stroke: '#0284C7',
+        rx: 8,
+        ry: 8,
         originX: 'left',
         originY: 'center',
-        selectable: false,
+        left: 0,
+        top: 0,
+      });
+
+      const text = new FabricText(label, {
+        fontSize: 20,
+        fontWeight: 'bold',
+        fontFamily: 'Pretendard',
+        fill: '#0369A1',
+        originX: 'left',
+        originY: 'center',
+        left: 10,
+        top: 0,
       });
 
       const point = new Circle({
-        left: leftX + 100,
-        top: y,
+        left: rect.width + 10,
+        top: 0,
         radius: 10,
         fill: '#7DD3FC',
         stroke: '#0EA5E9',
@@ -113,10 +121,18 @@ export default function MatchingQuestionCanvas({
         originX: 'center',
         originY: 'center',
         selectable: false,
+      });
+
+      const group = new Group([rect, text, point], {
+        left: leftX,
+        top: y,
+        originX: 'left',
+        originY: 'center',
+        selectable: false,
         evented: true,
       });
 
-      point.on('mousedown', () => {
+      group.on('mousedown', () => {
         if (feedbackVisible) return;
         startLabel.current = label;
 
@@ -126,45 +142,65 @@ export default function MatchingQuestionCanvas({
           return updated;
         });
 
-        const line = new Line(
-          [point.left!, point.top!, point.left!, point.top!],
+        const matrix = group.calcTransformMatrix();
+        const global = util.transformPoint(
           {
-            stroke: '#94A3B8',
-            strokeWidth: 4,
-            selectable: false,
-            evented: false,
+            x: point.left! + point.radius!,
+            y: point.top!,
           },
+          matrix,
         );
+
+        leftPoints.current[label] = new Circle({
+          left: global.x,
+          top: global.y,
+        });
+
+        const line = new Line([global.x, global.y, global.x, global.y], {
+          stroke: '#94A3B8',
+          strokeWidth: 4,
+          selectable: false,
+          evented: false,
+        });
 
         currentLine.current = line;
         canvas.add(line);
         canvas.sendObjectToBack(line);
       });
 
-      leftPoints.current[label] = point;
-      canvas.add(text);
-      canvas.add(point);
+      canvas.add(group);
     });
 
-    // 오른쪽 항목
     question.pairs.right.forEach((label, i) => {
       const y = startY + i * gapY;
 
+      const rect = new Rect({
+        width: 120,
+        height: 50,
+        fill: '#FCE7F3',
+        stroke: '#DB2777',
+        rx: 8,
+        ry: 8,
+        originX: 'left',
+        originY: 'center',
+        left: 0,
+        top: 0,
+      });
+
       const text = new FabricText(label, {
-        left: rightX,
-        top: y,
-        fontSize: 30,
+        fontSize: 20,
         fontWeight: 'bold',
         fontFamily: 'Pretendard',
-        fill: '#333',
+        fill: '#9D174D',
         originX: 'right',
         originY: 'center',
-        selectable: false,
+        left: rect.width - 10,
+        top: 0,
       });
 
       const point = new Circle({
-        left: rightX - 100,
-        top: y,
+        left: -10,
+        top: 0,
         radius: 10,
         fill: '#FBCFE8',
         stroke: '#EC4899',
@@ -172,19 +208,38 @@ export default function MatchingQuestionCanvas({
         originX: 'center',
         originY: 'center',
         selectable: false,
+      });
+
+      const group = new Group([rect, point, text], {
+        left: rightX,
+        top: y,
+        originX: 'left',
+        originY: 'center',
+        selectable: false,
         evented: true,
       });
 
-      point.on('mouseup', () => {
+      group.on('mouseup', () => {
         if (feedbackVisible) return;
         const start = startLabel.current;
         if (!start) return;
 
+        const matrix = group.calcTransformMatrix();
+        const global = util.transformPoint(
+          {
+            x: point.left! - point.radius!,
+            y: point.top!,
+          },
+          matrix,
+        );
+
+        rightPoints.current[label] = new Circle({
+          left: global.x,
+          top: global.y,
+        });
+
         if (currentLine.current) {
-          currentLine.current.set({
-            x2: point.left!,
-            y2: point.top!,
-          });
+          currentLine.current.set({ x2: global.x, y2: global.y });
         }
 
         setMatches((prev) => {
@@ -200,9 +255,7 @@ export default function MatchingQuestionCanvas({
         startLabel.current = null;
       });
 
-      rightPoints.current[label] = point;
-      canvas.add(text);
-      canvas.add(point);
+      canvas.add(group);
     });
 
     canvas.on('mouse:move', (opt) => {
@@ -220,7 +273,6 @@ export default function MatchingQuestionCanvas({
       }
     });
 
-    // 줌은 모든 객체 추가 후 마지막에
     const updateZoom = () => {
       const container = containerRef.current;
       if (!container) return;
@@ -242,7 +294,6 @@ export default function MatchingQuestionCanvas({
     };
   }, [question.id]);
 
-  // matches나 feedbackVisible이 변경되면 라인 다시 그림
   useEffect(() => {
     if (!fabricCanvas.current) return;
     drawLinesFromMatches(fabricCanvas.current, matches, feedbackVisible);
@@ -254,11 +305,9 @@ export default function MatchingQuestionCanvas({
       <h2 className='font-gmarket text-4xl font-extrabold text-center'>
         {question.question}
       </h2>
-
       <div ref={containerRef} className='w-full'>
         <canvas ref={canvasRef} />
       </div>
-
       <div className='text-lg text-gray-500 text-center'>
         💡 왼쪽 항목을 클릭한 후 오른쪽 항목으로 드래그하여 연결하세요
         <br />
