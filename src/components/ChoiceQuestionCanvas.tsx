@@ -218,12 +218,11 @@ export default function ChoiceQuestionCanvas({
     );
 
     return (
-      <div className='flex flex-col items-center gap-6'>
+      <div className='w-full flex flex-col items-center gap-6'>
         <svg
           width='100%'
           height='140'
           viewBox={`0 0 ${Math.max(600, totalWidth + 100)} 140`}
-          className='max-w-5xl'
           role='img'
           aria-label={`${media.groups.join(' 더하기 ')} 점 그룹 덧셈 시각화`}
         >

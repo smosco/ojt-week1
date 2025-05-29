@@ -55,6 +55,8 @@ export function useDragDropFeedback({
         )?.[1];
         if (correctAnswer) {
           const feedbackText = new FabricText(`정답: ${correctAnswer}`, {
+            fontFamily:
+              'Pretendard, -apple-system, BlinkMacSystemFont, sans-serif',
             fontSize: 16,
             fill: '#dc2626',
             fontWeight: 'bold',
