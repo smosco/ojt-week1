@@ -79,8 +79,8 @@ export default function MatchingQuestionCanvas({
     fabricCanvas.current = canvas;
     canvas.setDimensions({ width: BASE_WIDTH, height: BASE_HEIGHT });
 
-    const leftX = 80;
-    const rightX = 700;
+    const leftX = 70;
+    const rightX = 640;
     const startY = 80;
     const gapY = 120;
 
@@ -92,8 +92,8 @@ export default function MatchingQuestionCanvas({
         height: 50,
         fill: '#E0F2FE',
         stroke: '#0284C7',
-        rx: 8,
-        ry: 8,
+        rx: 10,
+        ry: 10,
         originX: 'left',
         originY: 'center',
         left: 0,
@@ -101,18 +101,18 @@ export default function MatchingQuestionCanvas({
       });
 
       const text = new FabricText(label, {
-        fontSize: 20,
+        fontSize: 24,
         fontWeight: 'bold',
         fontFamily: 'Pretendard, -apple-system, BlinkMacSystemFont, sans-serif',
         fill: '#0369A1',
-        originX: 'left',
+        originX: 'center',
         originY: 'center',
-        left: 10,
+        left: rect.width / 2,
         top: 0,
       });
 
       const point = new Circle({
-        left: rect.width + 10,
+        left: rect.width * 1.5,
         top: 0,
         radius: 10,
         fill: '#7DD3FC',
@@ -179,8 +179,8 @@ export default function MatchingQuestionCanvas({
         height: 50,
         fill: '#FCE7F3',
         stroke: '#DB2777',
-        rx: 8,
-        ry: 8,
+        rx: 10,
+        ry: 10,
         originX: 'left',
         originY: 'center',
         left: 0,
@@ -188,18 +188,18 @@ export default function MatchingQuestionCanvas({
       });
 
       const text = new FabricText(label, {
-        fontSize: 20,
+        fontSize: 24,
         fontWeight: 'bold',
         fontFamily: 'Pretendard, -apple-system, BlinkMacSystemFont, sans-serif',
         fill: '#9D174D',
-        originX: 'right',
+        originX: 'center',
         originY: 'center',
-        left: rect.width - 10,
+        left: rect.width / 2,
         top: 0,
       });
 
       const point = new Circle({
-        left: -10,
+        left: -rect.width / 2,
         top: 0,
         radius: 10,
         fill: '#FBCFE8',

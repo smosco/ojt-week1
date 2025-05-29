@@ -155,8 +155,9 @@ export default function DragDropQuestionCanvas({
         width: 200,
         height: 50,
         fill: '#dcfce7',
-        stroke: '#c084fc',
+        stroke: '#16a34a',
         strokeWidth: 2,
+        strokeDashArray: [5, 5],
         rx: 15,
         ry: 15,
         originX: 'center',
@@ -165,6 +166,7 @@ export default function DragDropQuestionCanvas({
       });
       const ghostText = new FabricText(word, {
         fontSize: 28,
+        fontFamily: 'Pretendard, -apple-system, BlinkMacSystemFont, sans-serif',
         fill: '#94a3b8',
         originX: 'center',
         originY: 'center',

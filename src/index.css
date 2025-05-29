@@ -42,3 +42,8 @@ h2 {
   font-weight: 500;
   line-height: 1.5;
 }
+
+span {
+  font-family: "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, "Helvetica Neue", sans-serif;
+}
