@@ -23,8 +23,8 @@ export const questionData: InteractiveQuestion[] = [
     id: 'choice2',
     type: 'choice',
     question: '색칠된 부분보다 큰 분수를 모두 고르세요',
-    options: ['1/4', '2/3', '3/4', '4/5', '7/8'],
-    correctAnswers: ['4/5', '7/8'],
+    options: ['1/2', '5/8', '2/3', '3/5', '7/10'],
+    correctAnswers: ['2/3', '7/10'],
     media: {
       type: 'fraction-circle',
       totalParts: 8,
