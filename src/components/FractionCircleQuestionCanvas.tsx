@@ -108,8 +108,10 @@ export default function FractionCircleQuestionCanvas({
     const slices: React.ReactNode[] = [];
 
     for (let i = 0; i < totalParts; i++) {
+      // 12시 방향부터 시계 방향으로 부채꼴을 그림
       const startAngle = (2 * Math.PI * i) / totalParts - Math.PI / 2;
       const endAngle = (2 * Math.PI * (i + 1)) / totalParts - Math.PI / 2;
+
       const isFilled = i < filledParts;
 
       // 외부 원의 좌표들
@@ -118,9 +120,11 @@ export default function FractionCircleQuestionCanvas({
       const outerEndX = center.x + outerRadius * Math.cos(endAngle);
       const outerEndY = center.y + outerRadius * Math.sin(endAngle);
 
+      // 호가 180도 초과인지 여부
       const largeArc = endAngle - startAngle > Math.PI ? 1 : 0;
 
       // 일반 원형 슬라이스 경로
+      // A rx ry x-axis-rotation(타원의 회전 각도) large-arc-flag(호가 180도 초과인지) sweep-flag(시계방향 반시계 방향) x y
       const slicePath = `
         M ${center.x} ${center.y}
         L ${outerStartX} ${outerStartY}
