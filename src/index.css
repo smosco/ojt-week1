@@ -36,9 +36,10 @@ body {
     Roboto, "Helvetica Neue", sans-serif;
 }
 
+h1,
 h2 {
-  /* biome-ignore lint/a11y/useGenericFontNames: <explanation> */
-  font-family: "GmarketSans";
+  font-family: "GmarketSans", "Pretendard", -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
   font-weight: 500;
   line-height: 1.5;
 }
