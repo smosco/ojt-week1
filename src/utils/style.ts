@@ -39,21 +39,21 @@ export const getMultipleAnswerButtonStyle = (
 
   if (feedbackVisible) {
     if (isCorrect && isSelected) {
-      return 'bg-green-500 text-white border-green-600'; // 정답이면서 선택함
+      return 'bg-green-200 text-green-900 border-green-400'; // 정답이면서 선택함
     }
     if (isCorrect && !isSelected) {
-      return 'bg-green-200 text-green-800 border-green-400'; // 정답인데 선택 안함
+      return 'bg-gray-100 text-green-800 border-green-400'; // 정답인데 선택 안함
     }
     if (!isCorrect && isSelected) {
-      return 'bg-red-500 text-white border-red-600'; // 오답인데 선택함
+      return 'bg-red-200 text-red-900 border-red-400'; // 오답인데 선택함
     }
     return 'bg-gray-100 text-gray-600 border-gray-300'; // 오답이면서 선택 안함
   }
 
   // 피드백 전 상태
   if (isSelected) {
-    return 'bg-blue-500 text-white border-blue-600 shadow-lg transform scale-105';
+    return 'bg-yellow-200 text-yellow-900 border-yellow-400';
   }
 
-  return 'bg-white text-gray-700 border-gray-300 hover:bg-blue-50 hover:border-blue-300';
+  return 'bg-white text-gray-800 border-gray-300 hover:bg-gray-50';
 };

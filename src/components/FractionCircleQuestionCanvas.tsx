@@ -209,15 +209,14 @@ export default function FractionCircleQuestionCanvas({
             {/* 선택 표시 */}
             {userAnswer?.includes(option) && (
               <div className='absolute top-1 right-1'>
-                {/* biome-ignore lint/a11y/noSvgWithoutTitle: <explanation> */}
-                <svg
+                {/* <svg
                   width='16'
                   height='16'
                   viewBox='0 0 16 16'
                   fill='currentColor'
                 >
                   <path d='M8 0C3.58 0 0 3.58 0 8s3.58 8 8 8 8-3.58 8-8-3.58-8-8-8zm3.5 6L7 10.5 4.5 8 5.91 6.59 7 7.67l3.59-3.58L12 5.5z' />
-                </svg>
+                </svg> */}
               </div>
             )}
 
